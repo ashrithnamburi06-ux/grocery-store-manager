@@ -12,7 +12,7 @@ export default function AddPayment() {
 
   const [amount, setAmount] = useState('')
   const [date,   setDate]   = useState(new Date().toISOString().slice(0, 10))
-  const [billImage, setBillImage] = useState('')   // ✅ NEW
+  const [billImage, setBillImage] = useState('')
   const [error,  setError]  = useState('')
   const [toast,  setToast]  = useState('')
 
@@ -27,26 +27,40 @@ export default function AddPayment() {
     )
   }
 
-  // ✅ NEW FUNCTION
+  // ✅ PWA SAFE IMAGE HANDLER
   const handleImageChange = (e) => {
-  const file = e.target.files[0]
-  if (!file) return
+    const file = e.target.files?.[0]
 
-  // 🚨 FIX: prevent large image crash
-  if (file.size > 1000000) {
-    alert("Image too large. Please select a smaller image.")
-    return
-  }
+    if (!file) {
+      alert("No image selected")
+      return
+    }
 
-  const reader = new FileReader()
-  reader.onloadend = () => {
-    setBillImage(reader.result)
+    console.log("Selected file:", file)
+
+    // 🚨 Prevent large image crash (important for mobile/PWA)
+    if (file.size > 2000000) {
+      alert("Image too large. Please select a smaller image.")
+      return
+    }
+
+    const reader = new FileReader()
+
+    reader.onload = () => {
+      setBillImage(reader.result)
+      console.log("Image stored")
+    }
+
+    reader.onerror = () => {
+      alert("Error reading image")
+    }
+
+    reader.readAsDataURL(file)
   }
-  reader.readAsDataURL(file)
-}
 
   const handleSubmit = (e) => {
     e.preventDefault()
+
     if (!amount || Number(amount) <= 0) {
       setError('Enter a valid amount')
       return
@@ -57,8 +71,7 @@ export default function AddPayment() {
       supplierName: supplier.name,
       amount:       Number(amount),
       date,
-      billImage:    billImage, // ✅ NEW (IMPORTANT)
-      createdAt:    new Date().toISOString()
+      billImage:    billImage
     })
 
     setToast('Payment recorded ✓')
@@ -71,17 +84,19 @@ export default function AddPayment() {
 
       <div className="screen-content">
         <div className="card">
-          <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', fontWeight: 600 }}>PAYING TO</p>
-          <p style={{ fontSize: '18px', fontWeight: 700, marginTop: '4px' }}>{supplier.name}</p>
+          <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', fontWeight: 600 }}>
+            PAYING TO
+          </p>
+          <p style={{ fontSize: '18px', fontWeight: 700 }}>{supplier.name}</p>
 
           {remaining > 0 && (
-            <p style={{ fontSize: '13px', color: 'var(--color-danger)', fontWeight: 600, marginTop: '4px' }}>
+            <p style={{ fontSize: '13px', color: 'red' }}>
               Remaining balance: ₹{remaining.toLocaleString()}
             </p>
           )}
 
           {remaining === 0 && (
-            <p style={{ fontSize: '13px', color: 'var(--color-success)', fontWeight: 600, marginTop: '4px' }}>
+            <p style={{ fontSize: '13px', color: 'green' }}>
               ✅ No pending balance
             </p>
           )}
@@ -90,47 +105,40 @@ export default function AddPayment() {
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           
           <div className="form-group">
-            <label className="form-label" htmlFor="ap-amount">Amount Paid (₹)</label>
+            <label>Amount Paid (₹)</label>
             <input
-              id="ap-amount"
-              className="form-input"
               type="number"
-              inputMode="numeric"
-              placeholder="0"
-              min="1"
               value={amount}
               onChange={e => { setAmount(e.target.value); setError('') }}
             />
-            {error && <span style={{ color: 'var(--color-danger)', fontSize: '12px' }}>{error}</span>}
+            {error && <span style={{ color: 'red', fontSize: '12px' }}>{error}</span>}
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="ap-date">Date</label>
+            <label>Date</label>
             <input
-              id="ap-date"
-              className="form-input"
               type="date"
               value={date}
               onChange={e => setDate(e.target.value)}
             />
           </div>
 
-          {/* ✅ NEW IMAGE INPUT */}
+          {/* ✅ PWA SAFE INPUT */}
           <div className="form-group">
-            <label className="form-label">Upload Bill Image</label>
+            <label>Upload Bill Image</label>
             <input 
               type="file" 
-              accept="image/*" 
+              accept="image/*"
               onChange={handleImageChange}
             />
           </div>
 
-          {/* ✅ OPTIONAL PREVIEW */}
+          {/* ✅ IMAGE PREVIEW */}
           {billImage && (
-            <img src={billImage} alt="preview" width="100" style={{ borderRadius: '6px' }} />
+            <img src={billImage} alt="preview" width="100" />
           )}
 
-          <button id="ap-submit" type="submit" className="btn btn--primary" style={{ marginTop: '8px' }}>
+          <button type="submit" className="btn btn--primary">
             Confirm Payment
           </button>
 
