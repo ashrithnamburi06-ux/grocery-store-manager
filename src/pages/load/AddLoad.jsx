@@ -207,6 +207,7 @@ export default function AddLoad() {
               className="form-input"
               type="date"
               value={date}
+              placeholder="e.g. date of purchase"
               onChange={e => setDate(e.target.value)}
             />
           </div>
