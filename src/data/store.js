@@ -128,8 +128,8 @@ export const getSupplierBalance = (supplierId) => {
   )
 
   const totalCredit = loads.reduce(
-    (s, l) => s + Number(l.amount),
-    0
+  (s, l) => s + Number(l.pendingAmount ?? l.amount ?? 0),
+  0
   )
 
   const totalPaid = payments.reduce(
