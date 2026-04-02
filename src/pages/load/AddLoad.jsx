@@ -23,11 +23,10 @@ export default function AddLoad() {
     paymentType:   'Cash',
     amount:        '',
   })
-
   const [toast,  setToast]  = useState('')
   const [errors, setErrors] = useState({})
 
-  // ✅ NEW STATES
+  // ✅ ADDED STATES (ONLY ADDITION)
   const [amountPaid, setAmountPaid] = useState('')
   const [date, setDate] = useState('')
 
@@ -37,7 +36,7 @@ export default function AddLoad() {
   const set = (field, value) =>
     setForm(f => ({ ...f, [field]: value }))
 
-  // ✅ PAYMENT CALCULATION
+  // ✅ ADDED CALCULATION (ONLY ADDITION)
   const totalAmount   = Number(form.amount) || 0
   const paid          = Number(amountPaid) || 0
   const pendingAmount = totalAmount - paid
@@ -59,6 +58,7 @@ export default function AddLoad() {
     const errs = validate()
     if (Object.keys(errs).length) { setErrors(errs); return }
 
+    // Create new item if needed
     let finalItemId   = form.itemId
     let finalItemName = inventory.find(it => it.id === form.itemId)?.name || ''
 
@@ -73,6 +73,7 @@ export default function AddLoad() {
       finalItemName = newItem.name
     }
 
+    // Create new supplier if needed
     let finalSupplierId   = form.supplierId
     let finalSupplierName = suppliers.find(s => s.id === form.supplierId)?.name || ''
     let finalSupplierPhone = suppliers.find(s => s.id === form.supplierId)?.phone || ''
@@ -87,21 +88,21 @@ export default function AddLoad() {
       finalSupplierPhone = newS.phone
     }
 
-    addLoad({
-      itemId:        finalItemId,
-      itemName:      finalItemName,
-      quantity:      Number(form.quantity),
-      supplierId:    finalSupplierId,
-      supplierName:  finalSupplierName,
-      supplierPhone: finalSupplierPhone,
-      paymentType:   form.paymentType,
-      amount:        Number(form.amount),
+   addLoad({
+  itemId:        finalItemId,
+  itemName:      finalItemName,
+  quantity:      Number(form.quantity),
+  supplierId:    finalSupplierId,
+  supplierName:  finalSupplierName,
+  supplierPhone: finalSupplierPhone,
+  paymentType:   form.paymentType,
+  amount:        Number(form.amount),
 
-      // ✅ NEW DATA
-      amountPaid:    paid,
-      pendingAmount: pendingAmount,
-      date:          date,
-    })
+  // ✅ ONLY ADDED
+  amountPaid:    paid,
+  pendingAmount: pendingAmount,
+  date:          date,
+})
 
     setToast('Load added ✓')
     setTimeout(() => navigate('/dashboard'), 1500)
@@ -138,17 +139,21 @@ export default function AddLoad() {
             <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <p style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-primary)' }}>New Item Details</p>
               <div className="form-group">
-                <label className="form-label">Item Name</label>
+                <label className="form-label" htmlFor="al-new-item-name">Item Name</label>
                 <input
+                  id="al-new-item-name"
                   className="form-input"
                   type="text"
+                  placeholder="e.g. Basmati Rice"
                   value={form.newItemName}
                   onChange={e => set('newItemName', e.target.value)}
                 />
+                {errors.newItemName && <span style={{ color: 'var(--color-danger)', fontSize: '12px' }}>{errors.newItemName}</span>}
               </div>
               <div className="form-group">
-                <label className="form-label">Unit</label>
+                <label className="form-label" htmlFor="al-new-item-unit">Unit</label>
                 <select
+                  id="al-new-item-unit"
                   className="form-select"
                   value={form.newItemUnit}
                   onChange={e => set('newItemUnit', e.target.value)}
@@ -161,19 +166,25 @@ export default function AddLoad() {
 
           {/* ── Quantity ── */}
           <div className="form-group">
-            <label className="form-label">Quantity</label>
+            <label className="form-label" htmlFor="al-qty">Quantity</label>
             <input
+              id="al-qty"
               className="form-input"
               type="number"
+              inputMode="numeric"
+              placeholder="0"
+              min="1"
               value={form.quantity}
               onChange={e => set('quantity', e.target.value)}
             />
+            {errors.quantity && <span style={{ color: 'var(--color-danger)', fontSize: '12px' }}>{errors.quantity}</span>}
           </div>
 
           {/* ── Supplier ── */}
           <div className="form-group">
-            <label className="form-label">Supplier</label>
+            <label className="form-label" htmlFor="al-supplier">Supplier</label>
             <select
+              id="al-supplier"
               className="form-select"
               value={form.supplierId}
               onChange={e => set('supplierId', e.target.value)}
@@ -184,24 +195,37 @@ export default function AddLoad() {
               ))}
               <option value="__new__">+ Add New Supplier</option>
             </select>
+            {errors.supplierId && <span style={{ color: 'var(--color-danger)', fontSize: '12px' }}>{errors.supplierId}</span>}
           </div>
 
           {isNewSupplier && (
-            <div className="card">
-              <input
-                className="form-input"
-                placeholder="Supplier Name"
-                value={form.newSupplierName}
-                onChange={e => set('newSupplierName', e.target.value)}
-              />
-              <input
-                className="form-input"
-                placeholder="Phone"
-                value={form.newSupplierPhone}
-                onChange={e =>
-                  set('newSupplierPhone', e.target.value.replace(/\D/g, '').slice(0, 10))
-                }
-              />
+            <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <p style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-primary)' }}>New Supplier Details</p>
+              <div className="form-group">
+                <label className="form-label" htmlFor="al-s-name">Supplier Name</label>
+                <input
+                  id="al-s-name"
+                  className="form-input"
+                  type="text"
+                  placeholder="e.g. Ravi Traders"
+                  value={form.newSupplierName}
+                  onChange={e => set('newSupplierName', e.target.value)}
+                />
+                {errors.newSupplierName && <span style={{ color: 'var(--color-danger)', fontSize: '12px' }}>{errors.newSupplierName}</span>}
+              </div>
+              <div className="form-group">
+                <label className="form-label" htmlFor="al-s-phone">Phone Number</label>
+                <input
+                  id="al-s-phone"
+                  className="form-input"
+                  type="tel"
+                  inputMode="numeric"
+                  placeholder="10-digit number"
+                  value={form.newSupplierPhone}
+                  onChange={e => set('newSupplierPhone', e.target.value.replace(/\D/g, '').slice(0, 10))}
+                />
+                {errors.newSupplierPhone && <span style={{ color: 'var(--color-danger)', fontSize: '12px' }}>{errors.newSupplierPhone}</span>}
+              </div>
             </div>
           )}
 
@@ -222,7 +246,7 @@ export default function AddLoad() {
             </div>
           </div>
 
-          {/* ── Total Amount ── */}
+          {/* ── Amount ── */}
           <div className="form-group">
             <label className="form-label">Total Amount (₹)</label>
             <input
@@ -233,7 +257,7 @@ export default function AddLoad() {
             />
           </div>
 
-          {/* ✅ Amount Paid */}
+          {/* ✅ ADDED UI */}
           <div className="form-group">
             <label className="form-label">Amount Paid (₹)</label>
             <input
@@ -244,7 +268,6 @@ export default function AddLoad() {
             />
           </div>
 
-          {/* ✅ Pending */}
           <div className="form-group">
             <label className="form-label">Pending Amount (₹)</label>
             <input
@@ -255,7 +278,6 @@ export default function AddLoad() {
             />
           </div>
 
-          {/* ✅ Date */}
           <div className="form-group">
             <label className="form-label">Date</label>
             <input
@@ -273,7 +295,6 @@ export default function AddLoad() {
           <button type="button" className="btn btn--outline" onClick={() => navigate(-1)}>
             Cancel
           </button>
-
         </form>
       </div>
 
