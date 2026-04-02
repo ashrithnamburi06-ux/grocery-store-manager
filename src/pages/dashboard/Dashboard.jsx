@@ -1,11 +1,11 @@
 import { useNavigate } from 'react-router-dom'
 import TopBar from '../../components/TopBar'
 import BottomNav from '../../components/BottomNav'
+import { getLoads } from '../../data/store'
 import {
   getUser,
   getLowStockItems,
   getInventory,
-  getMonthlyExpenses,
   getAllPendingBalances,
 } from '../../data/store'
 
@@ -14,9 +14,28 @@ export default function Dashboard() {
   const user      = getUser()
   const lowStock  = getLowStockItems()
   const allItems  = getInventory()
-  const monthly   = getMonthlyExpenses()
   const pending   = getAllPendingBalances()
+
   const totalOwed = pending.reduce((s, p) => s + p.remaining, 0)
+
+  const loads = getLoads()
+  const now = new Date()
+
+  // 🔥 FILTER CURRENT MONTH
+  const monthlyLoads = loads.filter(load => {
+    const date = new Date(load.createdAt || Date.now())
+
+    return (
+      date.getMonth() === now.getMonth() &&
+      date.getFullYear() === now.getFullYear()
+    )
+  })
+
+  // 🔥 ONLY PAID AMOUNT = EXPENSE
+  const monthlyExpense = monthlyLoads.reduce(
+    (sum, l) => sum + (l.amountPaid || 0),
+    0
+  )
 
   return (
     <div className="screen">
@@ -31,21 +50,33 @@ export default function Dashboard() {
             <div className="stat-card__value">{allItems.length}</div>
             <div className="stat-card__label">Total Items</div>
           </div>
+
           <div className="stat-card">
             <div className="stat-card__icon">⚠️</div>
-            <div className="stat-card__value" style={{ color: lowStock.length > 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
+            <div
+              className="stat-card__value"
+              style={{ color: lowStock.length > 0 ? 'var(--color-danger)' : 'var(--color-success)' }}
+            >
               {lowStock.length}
             </div>
             <div className="stat-card__label">Low Stock</div>
           </div>
+
+          {/* ✅ FIXED HERE */}
           <div className="stat-card">
             <div className="stat-card__icon">💸</div>
-            <div className="stat-card__value">₹{monthly.toLocaleString()}</div>
+            <div className="stat-card__value">
+              ₹{monthlyExpense.toLocaleString()}
+            </div>
             <div className="stat-card__label">This Month's Expenses</div>
           </div>
+
           <div className="stat-card">
             <div className="stat-card__icon">🧾</div>
-            <div className="stat-card__value" style={{ color: totalOwed > 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
+            <div
+              className="stat-card__value"
+              style={{ color: totalOwed > 0 ? 'var(--color-danger)' : 'var(--color-success)' }}
+            >
               ₹{totalOwed.toLocaleString()}
             </div>
             <div className="stat-card__label">Pending Payments</div>
@@ -125,7 +156,9 @@ export default function Dashboard() {
                     <div className="pending-card__label">You owe</div>
                     <div className="pending-card__name">{s.name}</div>
                   </div>
-                  <div className="pending-card__amount">₹{s.remaining.toLocaleString()}</div>
+                  <div className="pending-card__amount">
+                    ₹{s.remaining.toLocaleString()}
+                  </div>
                 </div>
               ))}
             </div>
@@ -142,8 +175,9 @@ export default function Dashboard() {
             </p>
           </div>
         )}
-
+        
       </div>
+
       <BottomNav />
     </div>
   )
