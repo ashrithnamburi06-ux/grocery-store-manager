@@ -29,15 +29,21 @@ export default function AddPayment() {
 
   // ✅ NEW FUNCTION
   const handleImageChange = (e) => {
-    const file = e.target.files[0]
-    if (!file) return
+  const file = e.target.files[0]
+  if (!file) return
 
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      setBillImage(reader.result)
-    }
-    reader.readAsDataURL(file)
+  // 🚨 FIX: prevent large image crash
+  if (file.size > 1000000) {
+    alert("Image too large. Please select a smaller image.")
+    return
   }
+
+  const reader = new FileReader()
+  reader.onloadend = () => {
+    setBillImage(reader.result)
+  }
+  reader.readAsDataURL(file)
+}
 
   const handleSubmit = (e) => {
     e.preventDefault()
