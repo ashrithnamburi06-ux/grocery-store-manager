@@ -27,8 +27,8 @@ export default function AddLoad() {
   const [toast,  setToast]  = useState('')
   const [errors, setErrors] = useState({})
 
-  // 🔥 NEW STATES
-  const [amountPaid, setAmountPaid] = useState(0)
+  // ✅ NEW STATES
+  const [amountPaid, setAmountPaid] = useState('')
   const [date, setDate] = useState('')
 
   const isNewItem     = form.itemId === '__new__'
@@ -37,9 +37,9 @@ export default function AddLoad() {
   const set = (field, value) =>
     setForm(f => ({ ...f, [field]: value }))
 
-  // 🔥 CALCULATIONS
+  // ✅ PAYMENT CALCULATION
   const totalAmount   = Number(form.amount) || 0
-  const paid          = form.paymentType === 'Cash' ? totalAmount : Number(amountPaid) || 0
+  const paid          = Number(amountPaid) || 0
   const pendingAmount = totalAmount - paid
 
   const validate = () => {
@@ -97,7 +97,7 @@ export default function AddLoad() {
       paymentType:   form.paymentType,
       amount:        Number(form.amount),
 
-      // 🔥 NEW DATA
+      // ✅ NEW DATA
       amountPaid:    paid,
       pendingAmount: pendingAmount,
       date:          date,
@@ -116,30 +116,68 @@ export default function AddLoad() {
       <div className="screen-content">
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
-          {/* ITEM */}
+          {/* ── Item ── */}
           <div className="form-group">
-            <label className="form-label">Item</label>
-            <select className="form-select" value={form.itemId} onChange={e => set('itemId', e.target.value)}>
+            <label className="form-label" htmlFor="al-item">Item</label>
+            <select
+              id="al-item"
+              className="form-select"
+              value={form.itemId}
+              onChange={e => set('itemId', e.target.value)}
+            >
               <option value="">-- Select Item --</option>
               {inventory.map(it => (
                 <option key={it.id} value={it.id}>{it.name} ({it.unit})</option>
               ))}
               <option value="__new__">+ Create New Item</option>
             </select>
+            {errors.itemId && <span style={{ color: 'var(--color-danger)', fontSize: '12px' }}>{errors.itemId}</span>}
           </div>
 
-          {/* QUANTITY */}
+          {isNewItem && (
+            <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <p style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-primary)' }}>New Item Details</p>
+              <div className="form-group">
+                <label className="form-label">Item Name</label>
+                <input
+                  className="form-input"
+                  type="text"
+                  value={form.newItemName}
+                  onChange={e => set('newItemName', e.target.value)}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Unit</label>
+                <select
+                  className="form-select"
+                  value={form.newItemUnit}
+                  onChange={e => set('newItemUnit', e.target.value)}
+                >
+                  {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* ── Quantity ── */}
           <div className="form-group">
             <label className="form-label">Quantity</label>
-            <input className="form-input" type="number" value={form.quantity}
-              onChange={e => set('quantity', e.target.value)} />
+            <input
+              className="form-input"
+              type="number"
+              value={form.quantity}
+              onChange={e => set('quantity', e.target.value)}
+            />
           </div>
 
-          {/* SUPPLIER */}
+          {/* ── Supplier ── */}
           <div className="form-group">
             <label className="form-label">Supplier</label>
-            <select className="form-select" value={form.supplierId}
-              onChange={e => set('supplierId', e.target.value)}>
+            <select
+              className="form-select"
+              value={form.supplierId}
+              onChange={e => set('supplierId', e.target.value)}
+            >
               <option value="">-- Select Supplier --</option>
               {suppliers.map(s => (
                 <option key={s.id} value={s.id}>{s.name}</option>
@@ -148,7 +186,26 @@ export default function AddLoad() {
             </select>
           </div>
 
-          {/* PAYMENT TYPE */}
+          {isNewSupplier && (
+            <div className="card">
+              <input
+                className="form-input"
+                placeholder="Supplier Name"
+                value={form.newSupplierName}
+                onChange={e => set('newSupplierName', e.target.value)}
+              />
+              <input
+                className="form-input"
+                placeholder="Phone"
+                value={form.newSupplierPhone}
+                onChange={e =>
+                  set('newSupplierPhone', e.target.value.replace(/\D/g, '').slice(0, 10))
+                }
+              />
+            </div>
+          )}
+
+          {/* ── Payment Type ── */}
           <div className="form-group">
             <label className="form-label">Payment Type</label>
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -156,7 +213,6 @@ export default function AddLoad() {
                 <label key={type}>
                   <input
                     type="radio"
-                    value={type}
                     checked={form.paymentType === type}
                     onChange={() => set('paymentType', type)}
                   />
@@ -166,7 +222,7 @@ export default function AddLoad() {
             </div>
           </div>
 
-          {/* TOTAL AMOUNT */}
+          {/* ── Total Amount ── */}
           <div className="form-group">
             <label className="form-label">Total Amount (₹)</label>
             <input
@@ -177,19 +233,18 @@ export default function AddLoad() {
             />
           </div>
 
-          {/* 🔥 AMOUNT PAID */}
+          {/* ✅ Amount Paid */}
           <div className="form-group">
             <label className="form-label">Amount Paid (₹)</label>
             <input
               className="form-input"
               type="number"
-              value={form.paymentType === 'Cash' ? totalAmount : amountPaid}
+              value={amountPaid}
               onChange={e => setAmountPaid(e.target.value)}
-              disabled={form.paymentType === 'Cash'}
             />
           </div>
 
-          {/* 🔥 PENDING */}
+          {/* ✅ Pending */}
           <div className="form-group">
             <label className="form-label">Pending Amount (₹)</label>
             <input
@@ -200,20 +255,23 @@ export default function AddLoad() {
             />
           </div>
 
-          {/* 🔥 CALENDAR */}
+          {/* ✅ Date */}
           <div className="form-group">
-            <label className="form-label">Select Date</label>
+            <label className="form-label">Date</label>
             <input
               className="form-input"
               type="date"
               value={date}
-              placeholder="e.g. date of purchase"
               onChange={e => setDate(e.target.value)}
             />
           </div>
 
           <button type="submit" className="btn btn--primary">
             Save Load Entry
+          </button>
+
+          <button type="button" className="btn btn--outline" onClick={() => navigate(-1)}>
+            Cancel
           </button>
 
         </form>

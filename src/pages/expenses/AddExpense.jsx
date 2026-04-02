@@ -6,11 +6,15 @@ import { addExpense } from '../../data/store'
 
 export default function AddExpense() {
   const navigate = useNavigate()
+
   const [form, setForm] = useState({
     amount: '',
     date:   new Date().toISOString().slice(0, 10),
     note:   '',
+    name:   '',           // ✅ NEW
+    phone:  '',           // ✅ NEW
   })
+
   const [error, setError] = useState('')
   const [toast, setToast] = useState('')
 
@@ -20,7 +24,17 @@ export default function AddExpense() {
       setError('Enter a valid amount')
       return
     }
-    addExpense({ amount: Number(form.amount), date: form.date, note: form.note.trim() })
+
+    addExpense({
+      amount: Number(form.amount),
+      date: form.date,
+      note: form.note.trim(),
+
+      // ✅ NEW DATA
+      name: form.name.trim(),
+      phone: form.phone.trim(),
+    })
+
     setToast('Expense added ✓')
     setTimeout(() => navigate('/expenses'), 1500)
   }
@@ -31,6 +45,8 @@ export default function AddExpense() {
 
       <div className="screen-content">
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+          {/* AMOUNT */}
           <div className="form-group">
             <label className="form-label" htmlFor="ae-amount">Amount (₹)</label>
             <input
@@ -46,6 +62,7 @@ export default function AddExpense() {
             {error && <span style={{ color: 'var(--color-danger)', fontSize: '12px' }}>{error}</span>}
           </div>
 
+          {/* DATE */}
           <div className="form-group">
             <label className="form-label" htmlFor="ae-date">Date</label>
             <input
@@ -57,6 +74,7 @@ export default function AddExpense() {
             />
           </div>
 
+          {/* NOTE */}
           <div className="form-group">
             <label className="form-label" htmlFor="ae-note">Note (optional)</label>
             <input
@@ -69,12 +87,46 @@ export default function AddExpense() {
             />
           </div>
 
+          {/* 🔥 NAME (NEW) */}
+          <div className="form-group">
+            <label className="form-label" htmlFor="ae-name">Name</label>
+            <input
+              id="ae-name"
+              className="form-input"
+              type="text"
+              placeholder="Enter name"
+              value={form.name}
+              onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+            />
+          </div>
+
+          {/* 🔥 PHONE (NEW OPTIONAL) */}
+          <div className="form-group">
+            <label className="form-label" htmlFor="ae-phone">Phone (optional)</label>
+            <input
+              id="ae-phone"
+              className="form-input"
+              type="tel"
+              inputMode="numeric"
+              placeholder="Enter phone number"
+              value={form.phone}
+              onChange={e =>
+                setForm(f => ({
+                  ...f,
+                  phone: e.target.value.replace(/\D/g, '').slice(0, 10)
+                }))
+              }
+            />
+          </div>
+
           <button id="ae-submit" type="submit" className="btn btn--primary" style={{ marginTop: '8px' }}>
             Save Expense
           </button>
+
           <button type="button" className="btn btn--outline" onClick={() => navigate(-1)}>
             Cancel
           </button>
+
         </form>
       </div>
 
