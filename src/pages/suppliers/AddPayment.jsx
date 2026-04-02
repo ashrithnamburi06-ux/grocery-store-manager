@@ -29,34 +29,38 @@ export default function AddPayment() {
 
   // ✅ PWA SAFE IMAGE HANDLER
   const handleImageChange = (e) => {
-    const file = e.target.files?.[0]
+  const file = e.target.files?.[0]
+  if (!file) return
 
-    if (!file) {
-      alert("No image selected")
-      return
-    }
+  const img = new Image()
+  const reader = new FileReader()
 
-    console.log("Selected file:", file)
-
-    // 🚨 Prevent large image crash (important for mobile/PWA)
-    if (file.size > 2000000) {
-      alert("Image too large. Please select a smaller image.")
-      return
-    }
-
-    const reader = new FileReader()
-
-    reader.onload = () => {
-      setBillImage(reader.result)
-      console.log("Image stored")
-    }
-
-    reader.onerror = () => {
-      alert("Error reading image")
-    }
-
-    reader.readAsDataURL(file)
+  reader.onload = (event) => {
+    img.src = event.target.result
   }
+
+  img.onload = () => {
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+
+    // 🔥 resize (important)
+    const MAX_WIDTH = 400
+    const scale = MAX_WIDTH / img.width
+
+    canvas.width = MAX_WIDTH
+    canvas.height = img.height * scale
+
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+
+    // 🔥 compress to low quality
+    const compressed = canvas.toDataURL('image/jpeg', 0.6)
+
+    setBillImage(compressed)
+    console.log("Compressed image saved ✅")
+  }
+
+  reader.readAsDataURL(file)
+}
 
   const handleSubmit = (e) => {
     e.preventDefault()
