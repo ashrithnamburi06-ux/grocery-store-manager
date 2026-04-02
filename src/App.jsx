@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import MonthlyTransactions from './pages/MonthlyTransactions'
 import { getUser } from './data/store'
+
 
 // Auth
 import Login from './pages/auth/Login'
@@ -7,6 +9,7 @@ import Welcome from './pages/auth/Welcome'
 
 // Dashboard
 import Dashboard from './pages/dashboard/Dashboard'
+
 
 // Inventory
 import InventoryList from './pages/inventory/InventoryList'
@@ -55,6 +58,8 @@ export default function App() {
 
         {/* Dashboard */}
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/monthly-transactions" element={<MonthlyTransactions />} />
+        
 
         {/* Inventory */}
         <Route path="/inventory" element={<ProtectedRoute><InventoryList /></ProtectedRoute>} />
@@ -80,6 +85,7 @@ export default function App() {
 
         {/* Catch */}
         <Route path="*" element={<Navigate to="/" replace />} />
+        
 
       </Routes>
     </BrowserRouter>

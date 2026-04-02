@@ -63,13 +63,17 @@ export default function Dashboard() {
           </div>
 
           {/* ✅ FIXED HERE */}
-          <div className="stat-card">
-            <div className="stat-card__icon">💸</div>
-            <div className="stat-card__value">
-              ₹{monthlyExpense.toLocaleString()}
-            </div>
-            <div className="stat-card__label">This Month's Expenses</div>
-          </div>
+          <div 
+                 className="stat-card card--clickable"
+                 style={{ cursor: 'pointer' }}
+                 onClick={() => navigate('/monthly-transactions')}
+                      >
+                   <div className="stat-card__icon">💸</div>
+                 <div className="stat-card__value">
+                   ₹{monthlyExpense.toLocaleString()}
+                     </div>
+                 <div className="stat-card__label">This Month's Expenses</div>
+                  </div>
 
           <div className="stat-card">
             <div className="stat-card__icon">🧾</div>
