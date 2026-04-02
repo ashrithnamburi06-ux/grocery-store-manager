@@ -12,6 +12,7 @@ export default function AddPayment() {
 
   const [amount, setAmount] = useState('')
   const [date,   setDate]   = useState(new Date().toISOString().slice(0, 10))
+  const [billImage, setBillImage] = useState('')   // ✅ NEW
   const [error,  setError]  = useState('')
   const [toast,  setToast]  = useState('')
 
@@ -26,6 +27,18 @@ export default function AddPayment() {
     )
   }
 
+  // ✅ NEW FUNCTION
+  const handleImageChange = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setBillImage(reader.result)
+    }
+    reader.readAsDataURL(file)
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!amount || Number(amount) <= 0) {
@@ -38,9 +51,8 @@ export default function AddPayment() {
       supplierName: supplier.name,
       amount:       Number(amount),
       date,
-
-      // 🔥 ONLY ADDITION (IMPORTANT)
-      createdAt: new Date().toISOString()
+      billImage:    billImage, // ✅ NEW (IMPORTANT)
+      createdAt:    new Date().toISOString()
     })
 
     setToast('Payment recorded ✓')
@@ -55,11 +67,13 @@ export default function AddPayment() {
         <div className="card">
           <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', fontWeight: 600 }}>PAYING TO</p>
           <p style={{ fontSize: '18px', fontWeight: 700, marginTop: '4px' }}>{supplier.name}</p>
+
           {remaining > 0 && (
             <p style={{ fontSize: '13px', color: 'var(--color-danger)', fontWeight: 600, marginTop: '4px' }}>
               Remaining balance: ₹{remaining.toLocaleString()}
             </p>
           )}
+
           {remaining === 0 && (
             <p style={{ fontSize: '13px', color: 'var(--color-success)', fontWeight: 600, marginTop: '4px' }}>
               ✅ No pending balance
@@ -68,6 +82,7 @@ export default function AddPayment() {
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          
           <div className="form-group">
             <label className="form-label" htmlFor="ap-amount">Amount Paid (₹)</label>
             <input
@@ -94,9 +109,25 @@ export default function AddPayment() {
             />
           </div>
 
+          {/* ✅ NEW IMAGE INPUT */}
+          <div className="form-group">
+            <label className="form-label">Upload Bill Image</label>
+            <input 
+              type="file" 
+              accept="image/*" 
+              onChange={handleImageChange}
+            />
+          </div>
+
+          {/* ✅ OPTIONAL PREVIEW */}
+          {billImage && (
+            <img src={billImage} alt="preview" width="100" style={{ borderRadius: '6px' }} />
+          )}
+
           <button id="ap-submit" type="submit" className="btn btn--primary" style={{ marginTop: '8px' }}>
             Confirm Payment
           </button>
+
           <button type="button" className="btn btn--outline" onClick={() => navigate(`/suppliers/${id}`)}>
             Cancel
           </button>

@@ -153,14 +153,15 @@ export default function SupplierDetails() {
             </button>
           )}
         </div>
+
         <button
-             className="btn btn--outline btn--sm"
-               style={{ marginTop: '10px' }}
-               onClick={() => navigate(`/suppliers/${id}/add-bill`)}
-                >
-                📸 Capture Bill
-              </button>
-         
+          className="btn btn--outline btn--sm"
+          style={{ marginTop: '10px' }}
+          onClick={() => navigate(`/suppliers/${id}/add-bill`)}
+        >
+          📸 Capture Bill
+        </button>
+
         {/* Transaction history */}
         {history.length > 0 && (
           <div>
@@ -168,6 +169,7 @@ export default function SupplierDetails() {
 
             {history.map(item => (
               <div key={item.id} className="txn-item">
+
                 <div>
                   {item._type === 'credit'
                     ? `📥 Load — ${item.itemName}`
@@ -178,12 +180,23 @@ export default function SupplierDetails() {
                   {item._type === 'credit' ? '-' : '+'}₹{item.amount}
                 </div>
 
-                {/* ✅ Payment Date */}
+                {/* Date */}
                 {item._type === 'payment' && item.date && (
                   <div style={{ fontSize: '12px', color: 'gray' }}>
                     {new Date(item.date).toLocaleDateString()}
                   </div>
                 )}
+
+                {/* ✅ BILL IMAGE */}
+                {item._type === 'payment' && item.billImage && (
+                  <img
+                    src={item.billImage}
+                    alt="bill"
+                    width="80"
+                    style={{ marginTop: '6px', borderRadius: '6px' }}
+                  />
+                )}
+
               </div>
             ))}
           </div>

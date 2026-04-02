@@ -98,6 +98,8 @@ export const addLoad = (data) => {
 
 // ─── Payments (🔥 FIX ADDED) ─────────────────────────────────────────────────
 
+// ─── Payments (FINAL FIX) ─────────────────────────────────────────────────
+
 export const getPayments = () => read('payments', [])
 
 export const addPayment = (data) => {
@@ -105,8 +107,12 @@ export const addPayment = (data) => {
 
   const newPayment = {
     id: uid(),
-    date: new Date().toISOString(),
+
+    // ✅ KEEP ALL PASSED DATA (amount, date, billImage etc.)
     ...data,
+
+    // ✅ ADD SYSTEM FIELD
+    createdAt: new Date().toISOString()
   }
 
   write('payments', [...payments, newPayment])
