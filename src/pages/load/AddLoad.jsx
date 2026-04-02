@@ -22,7 +22,10 @@ export default function AddLoad() {
     newSupplierPhone: '',
     paymentType:   'Cash',
     amount:        '',
+    amountPaid:    '',
+    date:          '',
   })
+
   const [toast,  setToast]  = useState('')
   const [errors, setErrors] = useState({})
 
@@ -44,12 +47,15 @@ export default function AddLoad() {
     return e
   }
 
+  const totalAmount   = Number(form.amount) || 0
+  const amountPaid    = Number(form.amountPaid) || 0
+  const pendingAmount = totalAmount - amountPaid
+
   const handleSubmit = (e) => {
     e.preventDefault()
     const errs = validate()
     if (Object.keys(errs).length) { setErrors(errs); return }
 
-    // Create new item if needed
     let finalItemId   = form.itemId
     let finalItemName = inventory.find(it => it.id === form.itemId)?.name || ''
 
@@ -64,7 +70,6 @@ export default function AddLoad() {
       finalItemName = newItem.name
     }
 
-    // Create new supplier if needed
     let finalSupplierId   = form.supplierId
     let finalSupplierName = suppliers.find(s => s.id === form.supplierId)?.name || ''
     let finalSupplierPhone = suppliers.find(s => s.id === form.supplierId)?.phone || ''
@@ -79,16 +84,19 @@ export default function AddLoad() {
       finalSupplierPhone = newS.phone
     }
 
-   addLoad({
-  itemId:        finalItemId,
-  itemName:      finalItemName,
-  quantity:      Number(form.quantity),
-  supplierId:    finalSupplierId,
-  supplierName:  finalSupplierName,
-  supplierPhone: finalSupplierPhone,
-  paymentType:   form.paymentType,
-  amount:        Number(form.amount),
-})
+    addLoad({
+      itemId:        finalItemId,
+      itemName:      finalItemName,
+      quantity:      Number(form.quantity),
+      supplierId:    finalSupplierId,
+      supplierName:  finalSupplierName,
+      supplierPhone: finalSupplierPhone,
+      paymentType:   pendingAmount > 0 ? 'Credit' : 'Cash',
+      amount:        totalAmount,
+      amountPaid:    amountPaid,
+      pendingAmount: pendingAmount,
+      date:          form.date,
+    })
 
     setToast('Load added ✓')
     setTimeout(() => navigate('/dashboard'), 1500)
@@ -103,196 +111,82 @@ export default function AddLoad() {
       <div className="screen-content">
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
-          {/* ── Item ── */}
           <div className="form-group">
-            <label className="form-label" htmlFor="al-item">Item</label>
-            <select
-              id="al-item"
-              className="form-select"
-              value={form.itemId}
-              onChange={e => set('itemId', e.target.value)}
-            >
+            <label className="form-label">Item</label>
+            <select className="form-select" value={form.itemId} onChange={e => set('itemId', e.target.value)}>
               <option value="">-- Select Item --</option>
               {inventory.map(it => (
                 <option key={it.id} value={it.id}>{it.name} ({it.unit})</option>
               ))}
               <option value="__new__">+ Create New Item</option>
             </select>
-            {errors.itemId && <span style={{ color: 'var(--color-danger)', fontSize: '12px' }}>{errors.itemId}</span>}
           </div>
 
           {isNewItem && (
-            <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <p style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-primary)' }}>New Item Details</p>
-              <div className="form-group">
-                <label className="form-label" htmlFor="al-new-item-name">Item Name</label>
-                <input
-                  id="al-new-item-name"
-                  className="form-input"
-                  type="text"
-                  placeholder="e.g. Basmati Rice"
-                  value={form.newItemName}
-                  onChange={e => set('newItemName', e.target.value)}
-                />
-                {errors.newItemName && <span style={{ color: 'var(--color-danger)', fontSize: '12px' }}>{errors.newItemName}</span>}
-              </div>
-              <div className="form-group">
-                <label className="form-label" htmlFor="al-new-item-unit">Unit</label>
-                <select
-                  id="al-new-item-unit"
-                  className="form-select"
-                  value={form.newItemUnit}
-                  onChange={e => set('newItemUnit', e.target.value)}
-                >
-                  {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
-                </select>
-              </div>
+            <div className="card">
+              <input className="form-input" placeholder="Item Name" value={form.newItemName} onChange={e => set('newItemName', e.target.value)} />
+              <select className="form-select" value={form.newItemUnit} onChange={e => set('newItemUnit', e.target.value)}>
+                {UNITS.map(u => <option key={u}>{u}</option>)}
+              </select>
             </div>
           )}
 
-          {/* ── Quantity ── */}
           <div className="form-group">
-            <label className="form-label" htmlFor="al-qty">Quantity</label>
-            <input
-              id="al-qty"
-              className="form-input"
-              type="number"
-              inputMode="numeric"
-              placeholder="0"
-              min="1"
-              value={form.quantity}
-              onChange={e => set('quantity', e.target.value)}
-            />
-            {errors.quantity && <span style={{ color: 'var(--color-danger)', fontSize: '12px' }}>{errors.quantity}</span>}
+            <label className="form-label">Quantity</label>
+            <input className="form-input" type="number" value={form.quantity} onChange={e => set('quantity', e.target.value)} />
           </div>
 
-          {/* ── Supplier ── */}
           <div className="form-group">
-            <label className="form-label" htmlFor="al-supplier">Supplier</label>
-            <select
-              id="al-supplier"
-              className="form-select"
-              value={form.supplierId}
-              onChange={e => set('supplierId', e.target.value)}
-            >
+            <label className="form-label">Supplier</label>
+            <select className="form-select" value={form.supplierId} onChange={e => set('supplierId', e.target.value)}>
               <option value="">-- Select Supplier --</option>
               {suppliers.map(s => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
               <option value="__new__">+ Add New Supplier</option>
             </select>
-            {errors.supplierId && <span style={{ color: 'var(--color-danger)', fontSize: '12px' }}>{errors.supplierId}</span>}
           </div>
 
           {isNewSupplier && (
-            <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <p style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-primary)' }}>New Supplier Details</p>
-              <div className="form-group">
-                <label className="form-label" htmlFor="al-s-name">Supplier Name</label>
-                <input
-                  id="al-s-name"
-                  className="form-input"
-                  type="text"
-                  placeholder="e.g. Ravi Traders"
-                  value={form.newSupplierName}
-                  onChange={e => set('newSupplierName', e.target.value)}
-                />
-                {errors.newSupplierName && <span style={{ color: 'var(--color-danger)', fontSize: '12px' }}>{errors.newSupplierName}</span>}
-              </div>
-              <div className="form-group">
-                <label className="form-label" htmlFor="al-s-phone">Phone Number</label>
-                <input
-                  id="al-s-phone"
-                  className="form-input"
-                  type="tel"
-                  inputMode="numeric"
-                  placeholder="10-digit number"
-                  value={form.newSupplierPhone}
-                  onChange={e => set('newSupplierPhone', e.target.value.replace(/\D/g, '').slice(0, 10))}
-                />
-                {errors.newSupplierPhone && <span style={{ color: 'var(--color-danger)', fontSize: '12px' }}>{errors.newSupplierPhone}</span>}
-              </div>
+            <div className="card">
+              <input className="form-input" placeholder="Supplier Name" value={form.newSupplierName} onChange={e => set('newSupplierName', e.target.value)} />
+              <input className="form-input" placeholder="Phone" value={form.newSupplierPhone} onChange={e => set('newSupplierPhone', e.target.value)} />
             </div>
           )}
 
-          {/* ── Payment Type ── */}
           <div className="form-group">
             <label className="form-label">Payment Type</label>
             <div style={{ display: 'flex', gap: '12px' }}>
               {['Cash', 'Credit'].map(type => (
-                <label
-                  key={type}
-                  htmlFor={`al-pay-${type}`}
-                  style={{
-                    flex: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    padding: '13px',
-                    border: `2px solid ${form.paymentType === type ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                    borderRadius: 'var(--border-radius)',
-                    background: form.paymentType === type ? 'var(--color-primary-light)' : 'var(--color-surface)',
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    fontSize: '15px',
-                    color: form.paymentType === type ? 'var(--color-primary)' : 'var(--color-text-primary)',
-                    transition: 'all 0.15s',
-                  }}
-                >
-                  <input
-                    type="radio"
-                    id={`al-pay-${type}`}
-                    name="paymentType"
-                    value={type}
-                    checked={form.paymentType === type}
-                    onChange={() => set('paymentType', type)}
-                    style={{ display: 'none' }}
-                  />
-                  {type === 'Cash' ? '💵' : '🧾'} {type}
-                </label>
+                <button type="button" key={type} onClick={() => set('paymentType', type)}>
+                  {type}
+                </button>
               ))}
             </div>
           </div>
 
-          {form.paymentType === 'Credit' && (
-            <div
-              style={{
-                background: 'var(--color-danger-bg)',
-                border: '1px solid #fca5a5',
-                borderRadius: 'var(--border-radius)',
-                padding: '10px 14px',
-                fontSize: '13px',
-                color: 'var(--color-danger)',
-                fontWeight: 600,
-              }}
-            >
-              ⚠ This will be stored as a pending payment to the supplier.
-            </div>
-          )}
-
-          {/* ── Amount ── */}
           <div className="form-group">
-            <label className="form-label" htmlFor="al-amount">Total Amount (₹)</label>
-            <input
-              id="al-amount"
-              className="form-input"
-              type="number"
-              inputMode="numeric"
-              placeholder="0"
-              min="1"
-              value={form.amount}
-              onChange={e => set('amount', e.target.value)}
-            />
-            {errors.amount && <span style={{ color: 'var(--color-danger)', fontSize: '12px' }}>{errors.amount}</span>}
+            <label className="form-label">Total Amount (₹)</label>
+            <input className="form-input" type="number" value={form.amount} onChange={e => set('amount', e.target.value)} />
           </div>
 
-          <button id="al-submit" type="submit" className="btn btn--primary" style={{ marginTop: '8px' }}>
-            Save Load Entry
-          </button>
-          <button type="button" className="btn btn--outline" onClick={() => navigate(-1)}>
-            Cancel
-          </button>
+          {/* NEW BLOCKS */}
+          <div className="form-group">
+            <label className="form-label">Amount Paid (₹)</label>
+            <input className="form-input" type="number" value={form.amountPaid} onChange={e => set('amountPaid', e.target.value)} />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Pending Amount (₹)</label>
+            <input className="form-input" type="number" value={pendingAmount} readOnly />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Date</label>
+            <input className="form-input" type="date" value={form.date} onChange={e => set('date', e.target.value)} />
+          </div>
+
+          <button type="submit" className="btn btn--primary">Save Load Entry</button>
         </form>
       </div>
 
