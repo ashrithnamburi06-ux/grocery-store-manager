@@ -26,20 +26,11 @@ export default function AddLoad() {
   const [toast,  setToast]  = useState('')
   const [errors, setErrors] = useState({})
 
-  // ✅ ADDED STATES (ONLY ADDITION)
-  const [amountPaid, setAmountPaid] = useState('')
-  const [date, setDate] = useState('')
-
   const isNewItem     = form.itemId === '__new__'
   const isNewSupplier = form.supplierId === '__new__'
 
   const set = (field, value) =>
     setForm(f => ({ ...f, [field]: value }))
-
-  // ✅ ADDED CALCULATION (ONLY ADDITION)
-  const totalAmount   = Number(form.amount) || 0
-  const paid          = Number(amountPaid) || 0
-  const pendingAmount = totalAmount - paid
 
   const validate = () => {
     const e = {}
@@ -97,11 +88,6 @@ export default function AddLoad() {
   supplierPhone: finalSupplierPhone,
   paymentType:   form.paymentType,
   amount:        Number(form.amount),
-
-  // ✅ ONLY ADDED
-  amountPaid:    paid,
-  pendingAmount: pendingAmount,
-  date:          date,
 })
 
     setToast('Load added ✓')
@@ -234,64 +220,76 @@ export default function AddLoad() {
             <label className="form-label">Payment Type</label>
             <div style={{ display: 'flex', gap: '12px' }}>
               {['Cash', 'Credit'].map(type => (
-                <label key={type}>
+                <label
+                  key={type}
+                  htmlFor={`al-pay-${type}`}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    padding: '13px',
+                    border: `2px solid ${form.paymentType === type ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                    borderRadius: 'var(--border-radius)',
+                    background: form.paymentType === type ? 'var(--color-primary-light)' : 'var(--color-surface)',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    fontSize: '15px',
+                    color: form.paymentType === type ? 'var(--color-primary)' : 'var(--color-text-primary)',
+                    transition: 'all 0.15s',
+                  }}
+                >
                   <input
                     type="radio"
+                    id={`al-pay-${type}`}
+                    name="paymentType"
+                    value={type}
                     checked={form.paymentType === type}
                     onChange={() => set('paymentType', type)}
+                    style={{ display: 'none' }}
                   />
-                  {type}
+                  {type === 'Cash' ? '💵' : '🧾'} {type}
                 </label>
               ))}
             </div>
           </div>
 
+          {form.paymentType === 'Credit' && (
+            <div
+              style={{
+                background: 'var(--color-danger-bg)',
+                border: '1px solid #fca5a5',
+                borderRadius: 'var(--border-radius)',
+                padding: '10px 14px',
+                fontSize: '13px',
+                color: 'var(--color-danger)',
+                fontWeight: 600,
+              }}
+            >
+              ⚠ This will be stored as a pending payment to the supplier.
+            </div>
+          )}
+
           {/* ── Amount ── */}
           <div className="form-group">
-            <label className="form-label">Total Amount (₹)</label>
+            <label className="form-label" htmlFor="al-amount">Total Amount (₹)</label>
             <input
+              id="al-amount"
               className="form-input"
               type="number"
+              inputMode="numeric"
+              placeholder="0"
+              min="1"
               value={form.amount}
               onChange={e => set('amount', e.target.value)}
             />
+            {errors.amount && <span style={{ color: 'var(--color-danger)', fontSize: '12px' }}>{errors.amount}</span>}
           </div>
 
-          {/* ✅ ADDED UI */}
-          <div className="form-group">
-            <label className="form-label">Amount Paid (₹)</label>
-            <input
-              className="form-input"
-              type="number"
-              value={amountPaid}
-              onChange={e => setAmountPaid(e.target.value)}
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Pending Amount (₹)</label>
-            <input
-              className="form-input"
-              type="number"
-              value={pendingAmount}
-              readOnly
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Date</label>
-            <input
-              className="form-input"
-              type="date"
-              value={date}
-              onChange={e => setDate(e.target.value)}
-            />
-          </div>
-
-          <button type="submit" className="btn btn--primary">
+          <button id="al-submit" type="submit" className="btn btn--primary" style={{ marginTop: '8px' }}>
             Save Load Entry
           </button>
-
           <button type="button" className="btn btn--outline" onClick={() => navigate(-1)}>
             Cancel
           </button>
