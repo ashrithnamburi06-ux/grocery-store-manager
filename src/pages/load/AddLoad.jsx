@@ -79,6 +79,11 @@ export default function AddLoad() {
       finalSupplierPhone = newS.phone
     }
 
+    // 🔥 NEW LOGIC (ADDED ONLY)
+    const totalAmount = Number(form.amount)
+    const amountPaid  = form.paymentType === 'Cash' ? totalAmount : 0
+    const pendingAmount = totalAmount - amountPaid
+
     addLoad({
       itemId:        finalItemId,
       itemName:      finalItemName,
@@ -87,7 +92,12 @@ export default function AddLoad() {
       supplierName:  finalSupplierName,
       supplierPhone: finalSupplierPhone,
       paymentType:   form.paymentType,
-      amount:        Number(form.amount),
+      amount:        totalAmount,
+
+      // ✅ NEW FIELDS (ADDED)
+      totalAmount,
+      amountPaid,
+      pendingAmount,
     })
 
     setToast('Load added ✓')
@@ -188,29 +198,12 @@ export default function AddLoad() {
             <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <p style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-primary)' }}>New Supplier Details</p>
               <div className="form-group">
-                <label className="form-label" htmlFor="al-s-name">Supplier Name</label>
-                <input
-                  id="al-s-name"
-                  className="form-input"
-                  type="text"
-                  placeholder="e.g. Ravi Traders"
-                  value={form.newSupplierName}
-                  onChange={e => set('newSupplierName', e.target.value)}
-                />
-                {errors.newSupplierName && <span style={{ color: 'var(--color-danger)', fontSize: '12px' }}>{errors.newSupplierName}</span>}
+                <label className="form-label">Supplier Name</label>
+                <input className="form-input" value={form.newSupplierName} onChange={e => set('newSupplierName', e.target.value)} />
               </div>
               <div className="form-group">
-                <label className="form-label" htmlFor="al-s-phone">Phone Number</label>
-                <input
-                  id="al-s-phone"
-                  className="form-input"
-                  type="tel"
-                  inputMode="numeric"
-                  placeholder="10-digit number"
-                  value={form.newSupplierPhone}
-                  onChange={e => set('newSupplierPhone', e.target.value.replace(/\D/g, '').slice(0, 10))}
-                />
-                {errors.newSupplierPhone && <span style={{ color: 'var(--color-danger)', fontSize: '12px' }}>{errors.newSupplierPhone}</span>}
+                <label className="form-label">Phone</label>
+                <input className="form-input" value={form.newSupplierPhone} onChange={e => set('newSupplierPhone', e.target.value)} />
               </div>
             </div>
           )}
@@ -220,79 +213,31 @@ export default function AddLoad() {
             <label className="form-label">Payment Type</label>
             <div style={{ display: 'flex', gap: '12px' }}>
               {['Cash', 'Credit'].map(type => (
-                <label
-                  key={type}
-                  htmlFor={`al-pay-${type}`}
-                  style={{
-                    flex: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    padding: '13px',
-                    border: `2px solid ${form.paymentType === type ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                    borderRadius: 'var(--border-radius)',
-                    background: form.paymentType === type ? 'var(--color-primary-light)' : 'var(--color-surface)',
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    fontSize: '15px',
-                    color: form.paymentType === type ? 'var(--color-primary)' : 'var(--color-text-primary)',
-                    transition: 'all 0.15s',
-                  }}
-                >
+                <label key={type}>
                   <input
                     type="radio"
-                    id={`al-pay-${type}`}
-                    name="paymentType"
                     value={type}
                     checked={form.paymentType === type}
                     onChange={() => set('paymentType', type)}
-                    style={{ display: 'none' }}
                   />
-                  {type === 'Cash' ? '💵' : '🧾'} {type}
+                  {type}
                 </label>
               ))}
             </div>
           </div>
 
-          {form.paymentType === 'Credit' && (
-            <div
-              style={{
-                background: 'var(--color-danger-bg)',
-                border: '1px solid #fca5a5',
-                borderRadius: 'var(--border-radius)',
-                padding: '10px 14px',
-                fontSize: '13px',
-                color: 'var(--color-danger)',
-                fontWeight: 600,
-              }}
-            >
-              ⚠ This will be stored as a pending payment to the supplier.
-            </div>
-          )}
-
           {/* ── Amount ── */}
           <div className="form-group">
-            <label className="form-label" htmlFor="al-amount">Total Amount (₹)</label>
+            <label className="form-label">Amount</label>
             <input
-              id="al-amount"
               className="form-input"
               type="number"
-              inputMode="numeric"
-              placeholder="0"
-              min="1"
               value={form.amount}
               onChange={e => set('amount', e.target.value)}
             />
-            {errors.amount && <span style={{ color: 'var(--color-danger)', fontSize: '12px' }}>{errors.amount}</span>}
           </div>
 
-          <button id="al-submit" type="submit" className="btn btn--primary" style={{ marginTop: '8px' }}>
-            Save Load Entry
-          </button>
-          <button type="button" className="btn btn--outline" onClick={() => navigate(-1)}>
-            Cancel
-          </button>
+          <button type="submit">Save</button>
         </form>
       </div>
 
