@@ -47,15 +47,23 @@ export default function AddLoad() {
     return e
   }
 
+  // ✅ FINAL FIXED CALCULATION
   const totalAmount   = Number(form.amount) || 0
   const amountPaid    = Number(form.amountPaid) || 0
-  const pendingAmount = totalAmount - amountPaid
+  const pendingAmount = Math.max(totalAmount - amountPaid, 0)
 
   const handleSubmit = (e) => {
     e.preventDefault()
     const errs = validate()
     if (Object.keys(errs).length) { setErrors(errs); return }
 
+    // Prevent overpayment
+    if (amountPaid > totalAmount) {
+      alert('Amount paid cannot exceed total amount')
+      return
+    }
+
+    // Create new item if needed
     let finalItemId   = form.itemId
     let finalItemName = inventory.find(it => it.id === form.itemId)?.name || ''
 
@@ -70,6 +78,7 @@ export default function AddLoad() {
       finalItemName = newItem.name
     }
 
+    // Create new supplier if needed
     let finalSupplierId   = form.supplierId
     let finalSupplierName = suppliers.find(s => s.id === form.supplierId)?.name || ''
     let finalSupplierPhone = suppliers.find(s => s.id === form.supplierId)?.phone || ''
@@ -84,6 +93,7 @@ export default function AddLoad() {
       finalSupplierPhone = newS.phone
     }
 
+    // ✅ FINAL CORRECT DATA PASS
     addLoad({
       itemId:        finalItemId,
       itemName:      finalItemName,
@@ -91,10 +101,13 @@ export default function AddLoad() {
       supplierId:    finalSupplierId,
       supplierName:  finalSupplierName,
       supplierPhone: finalSupplierPhone,
-      paymentType:   pendingAmount > 0 ? 'Credit' : 'Cash',
+
       amount:        totalAmount,
       amountPaid:    amountPaid,
       pendingAmount: pendingAmount,
+
+      paymentType:   pendingAmount > 0 ? 'Credit' : 'Cash',
+
       date:          form.date,
     })
 
@@ -111,6 +124,7 @@ export default function AddLoad() {
       <div className="screen-content">
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
+          {/* Item */}
           <div className="form-group">
             <label className="form-label">Item</label>
             <select className="form-select" value={form.itemId} onChange={e => set('itemId', e.target.value)}>
@@ -131,11 +145,13 @@ export default function AddLoad() {
             </div>
           )}
 
+          {/* Quantity */}
           <div className="form-group">
             <label className="form-label">Quantity</label>
             <input className="form-input" type="number" value={form.quantity} onChange={e => set('quantity', e.target.value)} />
           </div>
 
+          {/* Supplier */}
           <div className="form-group">
             <label className="form-label">Supplier</label>
             <select className="form-select" value={form.supplierId} onChange={e => set('supplierId', e.target.value)}>
@@ -154,6 +170,7 @@ export default function AddLoad() {
             </div>
           )}
 
+          {/* Payment Type */}
           <div className="form-group">
             <label className="form-label">Payment Type</label>
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -165,22 +182,25 @@ export default function AddLoad() {
             </div>
           </div>
 
+          {/* Total */}
           <div className="form-group">
             <label className="form-label">Total Amount (₹)</label>
             <input className="form-input" type="number" value={form.amount} onChange={e => set('amount', e.target.value)} />
           </div>
 
-          {/* NEW BLOCKS */}
+          {/* Amount Paid */}
           <div className="form-group">
             <label className="form-label">Amount Paid (₹)</label>
             <input className="form-input" type="number" value={form.amountPaid} onChange={e => set('amountPaid', e.target.value)} />
           </div>
 
+          {/* Pending */}
           <div className="form-group">
             <label className="form-label">Pending Amount (₹)</label>
             <input className="form-input" type="number" value={pendingAmount} readOnly />
           </div>
 
+          {/* Date */}
           <div className="form-group">
             <label className="form-label">Date</label>
             <input className="form-input" type="date" value={form.date} onChange={e => set('date', e.target.value)} />
