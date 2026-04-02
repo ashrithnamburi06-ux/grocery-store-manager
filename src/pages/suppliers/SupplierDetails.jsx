@@ -1,11 +1,19 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import TopBar from '../../components/TopBar'
-import { getSupplierById, getSupplierBalance, getLoads, getPayments, updateSupplier } from '../../data/store'
+
+import {
+  getSupplierById,
+  getSupplierBalance,
+  getLoads,
+  getPayments,
+  updateSupplier
+} from '../../data/store'
 import { useState } from 'react'
 
 export default function SupplierDetails() {
-  const { id }   = useParams()
+  const { id } = useParams()
   const navigate = useNavigate()
+
   const supplier = getSupplierById(id)
 
   const [isEditing, setIsEditing] = useState(false)
@@ -27,8 +35,13 @@ export default function SupplierDetails() {
 
   const { totalCredit, totalPaid, remaining } = getSupplierBalance(id)
 
-  const creditLoads = getLoads().filter(l => l.supplierId === id && l.paymentType === 'Credit')
-  const paymentsMade = getPayments().filter(p => p.supplierId === id)
+  const creditLoads = getLoads().filter(
+    l => l.supplierId === id && l.paymentType === 'Credit'
+  )
+
+  const paymentsMade = getPayments().filter(
+    p => p.supplierId === id
+  )
 
   const history = [
     ...creditLoads.map(l => ({ ...l, _type: 'credit' })),
@@ -140,7 +153,14 @@ export default function SupplierDetails() {
             </button>
           )}
         </div>
-
+        <button
+             className="btn btn--outline btn--sm"
+               style={{ marginTop: '10px' }}
+               onClick={() => navigate(`/suppliers/${id}/add-bill`)}
+                >
+                📸 Capture Bill
+              </button>
+         
         {/* Transaction history */}
         {history.length > 0 && (
           <div>
@@ -157,10 +177,18 @@ export default function SupplierDetails() {
                 <div>
                   {item._type === 'credit' ? '-' : '+'}₹{item.amount}
                 </div>
+
+                {/* ✅ Payment Date */}
+                {item._type === 'payment' && item.date && (
+                  <div style={{ fontSize: '12px', color: 'gray' }}>
+                    {new Date(item.date).toLocaleDateString()}
+                  </div>
+                )}
               </div>
             ))}
           </div>
         )}
+
       </div>
     </div>
   )

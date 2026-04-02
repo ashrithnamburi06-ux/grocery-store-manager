@@ -1,6 +1,5 @@
 /**
  * store.js — Mock data layer with localStorage persistence
- * Replace these helpers with API calls when backend is ready.
  */
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -17,8 +16,6 @@ const read = (key, fallback) => {
 }
 
 const write = (key, value) => localStorage.setItem(key, JSON.stringify(value))
-
-// ❌ REMOVED: Seed function (this was inserting dummy data)
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
@@ -87,7 +84,6 @@ export const addLoad = (data) => {
 
   write('loads', [...loads, newLoad])
 
-  // Update inventory quantity
   const inventory = getInventory()
   const idx = inventory.findIndex(it => it.id === data.itemId)
 
@@ -100,15 +96,16 @@ export const addLoad = (data) => {
   return newLoad
 }
 
-// ─── Payments ─────────────────────────────────────────────────────────────────
+// ─── Payments (🔥 FIX ADDED) ─────────────────────────────────────────────────
 
 export const getPayments = () => read('payments', [])
 
 export const addPayment = (data) => {
   const payments = getPayments()
+
   const newPayment = {
     id: uid(),
-    date: new Date().toISOString().slice(0, 10),
+    date: new Date().toISOString(),
     ...data,
   }
 
@@ -116,11 +113,29 @@ export const addPayment = (data) => {
   return newPayment
 }
 
+// ─── Bills ────────────────────────────────────────────────────────────────
+
+export const getBills = () => read('bills', [])
+
+export const addBill = (data) => {
+  const bills = getBills()
+
+  const newBill = {
+    id: uid(),
+    date: new Date().toISOString().slice(0, 10),
+    createdAt: new Date().toISOString(),
+    ...data,
+  }
+
+  write('bills', [...bills, newBill])
+  return newBill
+}
+
 // ─── Supplier Balance Helpers ─────────────────────────────────────────────────
 
 export const getSupplierBalance = (supplierId) => {
   const loads = getLoads().filter(
-  l => l.supplierId === supplierId && Number(l.pendingAmount || 0) > 0
+    l => l.supplierId === supplierId && Number(l.pendingAmount || 0) > 0
   )
 
   const payments = getPayments().filter(
@@ -128,8 +143,8 @@ export const getSupplierBalance = (supplierId) => {
   )
 
   const totalCredit = loads.reduce(
-  (s, l) => s + Number(l.pendingAmount || 0),
-  0
+    (s, l) => s + Number(l.pendingAmount || 0),
+    0
   )
 
   const totalPaid = payments.reduce(
@@ -173,6 +188,7 @@ export const getMonthlyExpenses = () => {
     .filter(e => e.date.startsWith(month))
     .reduce((s, e) => s + Number(e.amount), 0)
 }
+
 export const updateSupplier = (id, updatedData) => {
   const suppliers = JSON.parse(localStorage.getItem('suppliers') || '[]')
 
