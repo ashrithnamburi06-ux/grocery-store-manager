@@ -120,7 +120,7 @@ export const addPayment = (data) => {
 
 export const getSupplierBalance = (supplierId) => {
   const loads = getLoads().filter(
-    l => l.supplierId === supplierId && l.paymentType === 'Credit'
+  l => l.supplierId === supplierId && Number(l.pendingAmount || 0) > 0
   )
 
   const payments = getPayments().filter(
