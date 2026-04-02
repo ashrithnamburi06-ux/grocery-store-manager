@@ -1,11 +1,18 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import TopBar from '../../components/TopBar'
-import { getSupplierById, getSupplierBalance, getLoads, getPayments } from '../../data/store'
+import { getSupplierById, getSupplierBalance, getLoads, getPayments, updateSupplier } from '../../data/store'
+import { useState } from 'react'
 
 export default function SupplierDetails() {
   const { id }   = useParams()
   const navigate = useNavigate()
   const supplier = getSupplierById(id)
+
+  const [isEditing, setIsEditing] = useState(false)
+  const [name, setName] = useState(supplier?.name || '')
+  const [phone, setPhone] = useState(supplier?.phone || '')
+  const [products, setProducts] = useState(supplier?.products || [])
+  const [newProduct, setNewProduct] = useState('')
 
   if (!supplier) {
     return (
@@ -23,70 +30,110 @@ export default function SupplierDetails() {
   const creditLoads = getLoads().filter(l => l.supplierId === id && l.paymentType === 'Credit')
   const paymentsMade = getPayments().filter(p => p.supplierId === id)
 
-  // Combined transaction history, sorted desc
   const history = [
     ...creditLoads.map(l => ({ ...l, _type: 'credit' })),
     ...paymentsMade.map(p => ({ ...p, _type: 'payment' })),
   ].sort((a, b) => new Date(b.date) - new Date(a.date))
 
+  const handleSave = () => {
+    updateSupplier(id, {
+      name,
+      phone,
+      products
+    })
+    setIsEditing(false)
+  }
+
   return (
     <div className="screen screen--no-nav">
       <TopBar
-        title={supplier.name}
+        title={isEditing ? (
+          <input value={name} onChange={e => setName(e.target.value)} />
+        ) : supplier.name}
         backPath="/suppliers"
-        action="Pay"
-        onAction={() => navigate(`/suppliers/${id}/add-payment`)}
+        action={isEditing ? "Save" : "Edit"}
+        onAction={() => isEditing ? handleSave() : setIsEditing(true)}
       />
 
       <div className="screen-content">
+
         {/* Contact */}
         <div className="card">
-          <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', fontWeight: 600, marginBottom: '6px' }}>
+          <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', fontWeight: 600 }}>
             CONTACT
           </p>
-          <a
-            id="supplier-call"
-            href={`tel:${supplier.phone}`}
-            className="phone-link"
-            style={{ fontSize: '17px' }}
-          >
-            📞 {supplier.phone}
-          </a>
+
+          {isEditing ? (
+            <input
+              value={phone}
+              onChange={e => setPhone(e.target.value)}
+              className="form-input"
+            />
+          ) : (
+            <a href={`tel:${supplier.phone}`} className="phone-link">
+              📞 {supplier.phone}
+            </a>
+          )}
+        </div>
+
+        {/* Products */}
+        <div className="card">
+          <p style={{ fontSize: '13px', fontWeight: 600 }}>Products</p>
+
+          {products.length === 0 && <p style={{ fontSize: '12px' }}>No products added</p>}
+
+          {products.map((p, i) => (
+            <div key={i}>• {p}</div>
+          ))}
+
+          {isEditing && (
+            <>
+              <input
+                className="form-input"
+                placeholder="Add product"
+                value={newProduct}
+                onChange={e => setNewProduct(e.target.value)}
+              />
+
+              <button
+                className="btn btn--outline"
+                style={{ marginTop: '8px' }}
+                onClick={() => {
+                  if (!newProduct.trim()) return
+                  setProducts([...products, newProduct])
+                  setNewProduct('')
+                }}
+              >
+                Add Product
+              </button>
+            </>
+          )}
         </div>
 
         {/* Balance summary */}
         <div className="card">
-          <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', fontWeight: 600, marginBottom: '4px' }}>
+          <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', fontWeight: 600 }}>
             ACCOUNT BALANCE
           </p>
 
           <div className="balance-row">
-            <span className="balance-row__label">Total Credit (Loads)</span>
-            <span className="balance-row__value balance-row__value--danger">
-              ₹{totalCredit.toLocaleString()}
-            </span>
+            <span>Total Credit</span>
+            <span>₹{totalCredit.toLocaleString()}</span>
           </div>
+
           <div className="balance-row">
-            <span className="balance-row__label">Total Paid</span>
-            <span className="balance-row__value balance-row__value--success">
-              ₹{totalPaid.toLocaleString()}
-            </span>
+            <span>Total Paid</span>
+            <span>₹{totalPaid.toLocaleString()}</span>
           </div>
-          <div className="balance-row" style={{ borderBottom: 'none', marginTop: '4px' }}>
-            <span style={{ fontWeight: 700, fontSize: '15px' }}>Remaining Balance</span>
-            <span
-              className={`balance-row__value ${remaining > 0 ? 'balance-row__value--danger' : 'balance-row__value--success'}`}
-              style={{ fontSize: '20px' }}
-            >
-              ₹{remaining.toLocaleString()}
-            </span>
+
+          <div className="balance-row">
+            <span>Remaining</span>
+            <span>₹{remaining.toLocaleString()}</span>
           </div>
 
           {remaining > 0 && (
             <button
-              id="sd-pay-btn"
               className="btn btn--primary btn--sm"
-              style={{ marginTop: '12px' }}
               onClick={() => navigate(`/suppliers/${id}/add-payment`)}
             >
               Record Payment
@@ -97,28 +144,21 @@ export default function SupplierDetails() {
         {/* Transaction history */}
         {history.length > 0 && (
           <div>
-            <p className="section-title" style={{ marginBottom: '8px' }}>Transaction History</p>
-            <div className="list-container txn-list">
-              {history.map(item => (
-                <div key={item.id} className="txn-item">
-                  <div>
-                    <div className="txn-item__type">
-                      {item._type === 'credit' ? `📥 Load — ${item.itemName}` : '💳 Payment'}
-                    </div>
-                    <div className="txn-item__date">{item.date}</div>
-                  </div>
-                  <div className={`txn-item__amount ${item._type === 'credit' ? 'txn-item__amount--credit' : 'txn-item__amount--payment'}`}>
-                    {item._type === 'credit' ? '−' : '+'}₹{Number(item.amount).toLocaleString()}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+            <p className="section-title">Transaction History</p>
 
-        {history.length === 0 && (
-          <div className="empty-state">
-            <p className="empty-state__title">No transactions yet</p>
+            {history.map(item => (
+              <div key={item.id} className="txn-item">
+                <div>
+                  {item._type === 'credit'
+                    ? `📥 Load — ${item.itemName}`
+                    : '💳 Payment'}
+                </div>
+
+                <div>
+                  {item._type === 'credit' ? '-' : '+'}₹{item.amount}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

@@ -32,12 +32,17 @@ export default function AddPayment() {
       setError('Enter a valid amount')
       return
     }
+
     addPayment({
       supplierId:   id,
       supplierName: supplier.name,
       amount:       Number(amount),
       date,
+
+      // 🔥 ONLY ADDITION (IMPORTANT)
+      createdAt: new Date().toISOString()
     })
+
     setToast('Payment recorded ✓')
     setTimeout(() => navigate(`/suppliers/${id}`), 1500)
   }
@@ -47,7 +52,6 @@ export default function AddPayment() {
       <TopBar title="Record Payment" backPath={`/suppliers/${id}`} />
 
       <div className="screen-content">
-        {/* Supplier info card */}
         <div className="card">
           <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', fontWeight: 600 }}>PAYING TO</p>
           <p style={{ fontSize: '18px', fontWeight: 700, marginTop: '4px' }}>{supplier.name}</p>

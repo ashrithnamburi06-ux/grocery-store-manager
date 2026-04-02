@@ -173,3 +173,12 @@ export const getMonthlyExpenses = () => {
     .filter(e => e.date.startsWith(month))
     .reduce((s, e) => s + Number(e.amount), 0)
 }
+export const updateSupplier = (id, updatedData) => {
+  const suppliers = JSON.parse(localStorage.getItem('suppliers') || '[]')
+
+  const updated = suppliers.map(s =>
+    s.id === id ? { ...s, ...updatedData } : s
+  )
+
+  localStorage.setItem('suppliers', JSON.stringify(updated))
+}
