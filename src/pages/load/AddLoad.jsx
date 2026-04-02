@@ -13,23 +13,23 @@ export default function AddLoad() {
   const suppliers = getSuppliers()
 
   const [form, setForm] = useState({
-    itemId: '',
-    newItemName: '',
-    newItemUnit: 'kg',
-    quantity: '',
-    supplierId: '',
-    newSupplierName: '',
+    itemId:        '',
+    newItemName:   '',
+    newItemUnit:   'kg',
+    quantity:      '',
+    supplierId:    '',
+    newSupplierName:  '',
     newSupplierPhone: '',
-    paymentType: 'Cash',
-    amount: '',
-
-    // ✅ NEW
-    amountPaid: '',
-    date: '',
+    paymentType:   'Cash',
+    amount:        '',
   })
 
-  const [toast, setToast] = useState('')
+  const [toast,  setToast]  = useState('')
   const [errors, setErrors] = useState({})
+
+  // 🔥 NEW STATES
+  const [amountPaid, setAmountPaid] = useState(0)
+  const [date, setDate] = useState('')
 
   const isNewItem     = form.itemId === '__new__'
   const isNewSupplier = form.supplierId === '__new__'
@@ -37,20 +37,20 @@ export default function AddLoad() {
   const set = (field, value) =>
     setForm(f => ({ ...f, [field]: value }))
 
-  // 🔥 LIVE CALCULATION
+  // 🔥 CALCULATIONS
   const totalAmount   = Number(form.amount) || 0
-  const amountPaid    = Number(form.amountPaid) || 0
-  const pendingAmount = totalAmount - amountPaid
+  const paid          = form.paymentType === 'Cash' ? totalAmount : Number(amountPaid) || 0
+  const pendingAmount = totalAmount - paid
 
   const validate = () => {
     const e = {}
-    if (!form.itemId) e.itemId = 'Select an item'
-    if (isNewItem && !form.newItemName.trim()) e.newItemName = 'Item name required'
-    if (!form.quantity || Number(form.quantity) <= 0) e.quantity = 'Enter a valid quantity'
-    if (!form.supplierId) e.supplierId = 'Select a supplier'
-    if (isNewSupplier && !form.newSupplierName.trim()) e.newSupplierName = 'Supplier name required'
+    if (!form.itemId)                                    e.itemId   = 'Select an item'
+    if (isNewItem && !form.newItemName.trim())           e.newItemName = 'Item name required'
+    if (!form.quantity || Number(form.quantity) <= 0)   e.quantity = 'Enter a valid quantity'
+    if (!form.supplierId)                                e.supplierId = 'Select a supplier'
+    if (isNewSupplier && !form.newSupplierName.trim())  e.newSupplierName  = 'Supplier name required'
     if (isNewSupplier && form.newSupplierPhone.length < 10) e.newSupplierPhone = 'Enter valid phone number'
-    if (!form.amount || Number(form.amount) <= 0) e.amount = 'Enter total amount'
+    if (!form.amount || Number(form.amount) <= 0)        e.amount   = 'Enter total amount'
     return e
   }
 
@@ -59,14 +59,13 @@ export default function AddLoad() {
     const errs = validate()
     if (Object.keys(errs).length) { setErrors(errs); return }
 
-    // ITEM
     let finalItemId   = form.itemId
     let finalItemName = inventory.find(it => it.id === form.itemId)?.name || ''
 
     if (isNewItem) {
       const newItem = addInventoryItem({
-        name: form.newItemName.trim(),
-        unit: form.newItemUnit,
+        name:     form.newItemName.trim(),
+        unit:     form.newItemUnit,
         quantity: 0,
         minStock: 5,
       })
@@ -74,25 +73,19 @@ export default function AddLoad() {
       finalItemName = newItem.name
     }
 
-    // SUPPLIER
     let finalSupplierId   = form.supplierId
     let finalSupplierName = suppliers.find(s => s.id === form.supplierId)?.name || ''
     let finalSupplierPhone = suppliers.find(s => s.id === form.supplierId)?.phone || ''
 
     if (isNewSupplier) {
       const newS = addSupplier({
-        name: form.newSupplierName.trim(),
+        name:  form.newSupplierName.trim(),
         phone: form.newSupplierPhone.trim(),
       })
       finalSupplierId    = newS.id
       finalSupplierName  = newS.name
       finalSupplierPhone = newS.phone
     }
-
-    // ✅ FINAL PAYMENT CALCULATION
-    const totalAmountFinal   = Number(form.amount)
-    const amountPaidFinal    = Number(form.amountPaid) || 0
-    const pendingAmountFinal = totalAmountFinal - amountPaidFinal
 
     addLoad({
       itemId:        finalItemId,
@@ -102,13 +95,12 @@ export default function AddLoad() {
       supplierName:  finalSupplierName,
       supplierPhone: finalSupplierPhone,
       paymentType:   form.paymentType,
-      amount:        totalAmountFinal,
+      amount:        Number(form.amount),
 
-      // ✅ NEW FIELDS
-      totalAmount: totalAmountFinal,
-      amountPaid: amountPaidFinal,
-      pendingAmount: pendingAmountFinal,
-      date: form.date,
+      // 🔥 NEW DATA
+      amountPaid:    paid,
+      pendingAmount: pendingAmount,
+      date:          date,
     })
 
     setToast('Load added ✓')
@@ -137,82 +129,92 @@ export default function AddLoad() {
           </div>
 
           {/* QUANTITY */}
-          <input
-            className="form-input"
-            type="number"
-            placeholder="Quantity"
-            value={form.quantity}
-            onChange={e => set('quantity', e.target.value)}
-          />
+          <div className="form-group">
+            <label className="form-label">Quantity</label>
+            <input className="form-input" type="number" value={form.quantity}
+              onChange={e => set('quantity', e.target.value)} />
+          </div>
 
           {/* SUPPLIER */}
-          <select
-            className="form-select"
-            value={form.supplierId}
-            onChange={e => set('supplierId', e.target.value)}
-          >
-            <option value="">-- Select Supplier --</option>
-            {suppliers.map(s => (
-              <option key={s.id} value={s.id}>{s.name}</option>
-            ))}
-            <option value="__new__">+ Add New Supplier</option>
-          </select>
+          <div className="form-group">
+            <label className="form-label">Supplier</label>
+            <select className="form-select" value={form.supplierId}
+              onChange={e => set('supplierId', e.target.value)}>
+              <option value="">-- Select Supplier --</option>
+              {suppliers.map(s => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+              <option value="__new__">+ Add New Supplier</option>
+            </select>
+          </div>
 
           {/* PAYMENT TYPE */}
-          <div style={{ display: 'flex', gap: '12px' }}>
-            {['Cash', 'Credit'].map(type => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => set('paymentType', type)}
-                style={{
-                  flex: 1,
-                  background: form.paymentType === type ? '#4CAF50' : '#ddd'
-                }}
-              >
-                {type}
-              </button>
-            ))}
+          <div className="form-group">
+            <label className="form-label">Payment Type</label>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              {['Cash', 'Credit'].map(type => (
+                <label key={type}>
+                  <input
+                    type="radio"
+                    value={type}
+                    checked={form.paymentType === type}
+                    onChange={() => set('paymentType', type)}
+                  />
+                  {type}
+                </label>
+              ))}
+            </div>
           </div>
 
           {/* TOTAL AMOUNT */}
-          <input
-            className="form-input"
-            type="number"
-            placeholder="Total Amount"
-            value={form.amount}
-            onChange={e => set('amount', e.target.value)}
-          />
-
-          {/* 🔥 PAID + PENDING UI */}
-          <div className="card" style={{ padding: '12px' }}>
-
+          <div className="form-group">
+            <label className="form-label">Total Amount (₹)</label>
             <input
               className="form-input"
               type="number"
-              placeholder="Amount Paid"
-              value={form.amountPaid}
-              onChange={e => set('amountPaid', e.target.value)}
+              value={form.amount}
+              onChange={e => set('amount', e.target.value)}
             />
+          </div>
 
+          {/* 🔥 AMOUNT PAID */}
+          <div className="form-group">
+            <label className="form-label">Amount Paid (₹)</label>
+            <input
+              className="form-input"
+              type="number"
+              value={form.paymentType === 'Cash' ? totalAmount : amountPaid}
+              onChange={e => setAmountPaid(e.target.value)}
+              disabled={form.paymentType === 'Cash'}
+            />
+          </div>
+
+          {/* 🔥 PENDING */}
+          <div className="form-group">
+            <label className="form-label">Pending Amount (₹)</label>
             <input
               className="form-input"
               type="number"
               value={pendingAmount}
               readOnly
-              style={{ marginTop: '10px', background: '#eee' }}
             />
           </div>
 
-          {/* 📅 DATE */}
-          <input
-            className="form-input"
-            type="date"
-            value={form.date}
-            onChange={e => set('date', e.target.value)}
-          />
+          {/* 🔥 CALENDAR */}
+          <div className="form-group">
+            <label className="form-label">Select Date</label>
+            <input
+              className="form-input"
+              type="date"
+              value={date}
+              onChange={e => setDate(e.target.value)}
+            />
+          </div>
 
-          <button type="submit">Save</button>
+          <button type="submit" className="btn btn--primary">
+            Save Load Entry
+          </button>
+
         </form>
       </div>
 
