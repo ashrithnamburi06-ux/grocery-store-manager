@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react'
 import TopBar from '../../components/TopBar'
 import BottomNav from '../../components/BottomNav'
 import { getLoads } from '../../data/store'
+import { setShopName, getShopName } from '../../data/store'
+
 
 import {
   getUser,
@@ -17,6 +19,7 @@ import { collection, onSnapshot } from 'firebase/firestore'
 export default function Dashboard() {
   const navigate  = useNavigate()
   const user      = getUser()
+  const link = `${window.location.origin}/order?ownerId=${user.id}`
   const lowStock  = getLowStockItems()
   const allItems  = getInventory()
   const pending   = getAllPendingBalances()
@@ -198,9 +201,13 @@ export default function Dashboard() {
     </div>
   )
 }
-
 const handleShare = () => {
-  const link = `${window.location.origin}/order`
-  const message = `🛒 Please place your order here:\n${link}`
+  const user = getUser()
+  const shopName = localStorage.getItem('shopName') || "Our Store"
+
+  const link = `${window.location.origin}/order?ownerId=${user.id}&shop=${encodeURIComponent(shopName)}`
+
+  const message = `🛒 Welcome to ${shopName}\nPlace your order here:\n${link}`
+
   window.open(`https://wa.me/?text=${encodeURIComponent(message)}`)
 }

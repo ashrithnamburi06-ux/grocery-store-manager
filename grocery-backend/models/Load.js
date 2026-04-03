@@ -8,7 +8,7 @@ const loadSchema = new mongoose.Schema({
   quantity: Number,
   amount: Number,
   paymentType: String,
-   userId: String,
+  userId: String,
   date: { type: Date, default: Date.now }
 });
 

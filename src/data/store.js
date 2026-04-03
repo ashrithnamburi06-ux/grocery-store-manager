@@ -42,13 +42,22 @@ const write = (key, value) => localStorage.setItem(key, JSON.stringify(value))
 
 export const getUser = () => read('currentUser', null)
 
-export const loginUser = (phone, name) => {
-  const user = { phone, name: name || 'Shop Owner' }
+
+
+export const loginUser = (phone, name, id) => {
+  const user = {
+    phone,
+    name: name || 'Shop Owner',
+    id: id || Date.now().toString() // 🔥 IMPORTANT FIX
+  }
+
   write('currentUser', user)
   return user
 }
 
 export const logoutUser = () => localStorage.removeItem('currentUser')
+
+
 
 // ─── Suppliers ────────────────────────────────────────────────────────────────
 
@@ -227,18 +236,21 @@ export const updateSupplier = (id, updatedData) => {
 }
 export const addOrder = async (data) => {
   try {
-    console.log("Inside addOrder 🔥")
-
     const docRef = await addDoc(collection(db, "orders"), {
       ...data,
-      createdAt: new Date()
+      createdAt: new Date().toISOString() // 🔥 FINAL FIX
     })
 
-    console.log("Document written with ID: ", docRef.id)
     return docRef
-
   } catch (err) {
     console.error("Firestore Error ❌:", err)
     throw err
   }
+}
+export const setShopName = (name) => {
+  localStorage.setItem('shopName', name)
+}
+
+export const getShopName = () => {
+  return localStorage.getItem('shopName') || ''
 }

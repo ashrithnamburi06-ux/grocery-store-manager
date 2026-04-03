@@ -7,9 +7,20 @@ export default function CustomerOrder() {
   const [items, setItems] = useState('')
   const [time, setTime] = useState('')
 
+  // 🔥 GET DATA FROM URL (FIX)
+  const params = new URLSearchParams(window.location.search)
+  const ownerId = params.get('ownerId')
+  const shopName = params.get('shop') || "Our Store"
+
   const handleSubmit = async () => {
     if (!name || !items) {
       alert("Please enter required details")
+      return
+    }
+
+    // 🚨 PREVENT INVALID LINK
+    if (!ownerId) {
+      alert("Invalid order link ❌")
       return
     }
 
@@ -19,18 +30,17 @@ export default function CustomerOrder() {
       unit: 'kg'
     }))
 
-    const now = new Date() // 🔥 ADD THIS ABOVE
+    const now = new Date()
 
-await addOrder({
-  customerName: name,
-  phone,
-  items: itemList,
-  arrivalTime: time,
-  status: 'Pending',
-
-  // ✅ ADD THIS LINE
-  createdAt: now.toISOString()
-})
+    await addOrder({
+      customerName: name,
+      phone,
+      items: itemList,
+      arrivalTime: time,
+      status: 'Pending',
+      ownerId: ownerId,
+      createdAt: now.toISOString()
+    })
 
     alert("Order placed successfully ✅")
 
@@ -43,7 +53,9 @@ await addOrder({
   return (
     <div className="order-page">
       <div className="order-card">
-        <h2>🛒 Place Your Order</h2>
+
+        {/* 🔥 FIXED HEADER */}
+        <h2>🛒 Welcome to {shopName}</h2>
 
         <input
           placeholder="👤 Customer Name"
@@ -55,8 +67,7 @@ await addOrder({
           placeholder="📞 Phone Number"
           value={phone}
           maxLength={10}
-           pattern="[0-9]{10}"
-          onChange={e => setPhone(e.target.value)}
+          onChange={e => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
         />
 
         <textarea
@@ -69,18 +80,17 @@ Sugar 1kg`}
         />
 
         <label>⏰ Pickup Time</label>
-<p style={{ fontSize: '12px', color: '#666' }}>
-</p>
 
-<input
-  type="time"
-  value={time}
-  onChange={e => setTime(e.target.value)}
-/>
+        <input
+          type="time"
+          value={time}
+          onChange={e => setTime(e.target.value)}
+        />
 
         <button onClick={handleSubmit}>
           ✅ Place Order
         </button>
+
       </div>
     </div>
   )

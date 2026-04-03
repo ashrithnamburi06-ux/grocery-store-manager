@@ -1,13 +1,27 @@
 import { useEffect, useState } from 'react'
 import { db } from '../firebase'
-import { collection, onSnapshot } from 'firebase/firestore'
-import { completeOrderAndNotify } from '../data/store'
+import { collection, onSnapshot, query, where } from 'firebase/firestore'
+import { completeOrderAndNotify, getUser } from '../data/store'
 
 export default function Orders() {
   const [orders, setOrders] = useState([])
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "orders"), (snapshot) => {
+    const user = getUser()
+
+    // 🔥 SAFETY CHECK
+    if (!user || !user.id) {
+      setOrders([])
+      return
+    }
+
+    // 🔥 FILTER BY ownerId (MAIN FIX)
+    const q = query(
+      collection(db, "orders"),
+      where("ownerId", "==", user.id)
+    )
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       const list = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -34,14 +48,15 @@ export default function Orders() {
           <p>{order.phone}</p>
           <p>{order.items.map(i => i.name).join(', ')}</p>
           <p>Arrival: {order.arrivalTime}</p>
-          <p>Status: {order.status === "Completed" && <span>✅ Done</span>}</p>
-         <button onClick={() => completeOrderAndNotify(order)}>
-  ✅ Complete & Notify
-</button>
+          <p>Status: {order.status === "Completed" ? "✅ Done" : "Pending"}</p>
+
+          {order.status !== "Completed" && (
+            <button onClick={() => completeOrderAndNotify(order)}>
+              ✅ Complete & Notify
+            </button>
+          )}
         </div>
-        
       ))}
     </div>
-    
   )
 }
