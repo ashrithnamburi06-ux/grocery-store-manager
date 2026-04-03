@@ -48,9 +48,14 @@ export default function AddLoad() {
   }
 
   // ✅ FINAL FIXED CALCULATION
-  const totalAmount   = Number(form.amount) || 0
-  const amountPaid    = Number(form.amountPaid) || 0
-  const pendingAmount = Math.max(totalAmount - amountPaid, 0)
+    const totalAmount = Number(form.amount) || 0
+
+const amountPaid =
+  form.paymentType === 'Cash'
+    ? totalAmount
+    : Number(form.amountPaid) || 0
+
+const pendingAmount = Math.max(totalAmount - amountPaid, 0)
 
   const handleSubmit = (e) => {
     e.preventDefault()

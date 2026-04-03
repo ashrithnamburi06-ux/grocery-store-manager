@@ -102,18 +102,32 @@ export const getLowStockItems = () =>
 
 // ─── Loads ────────────────────────────────────────────────────────────────────
 
-export const getLoads = () => read('loads', [])
-
 export const addLoad = (data) => {
   const loads = getLoads()
+
+  const totalAmount = Number(data.amount) || 0
+
+  const amountPaid =
+    data.paymentType === 'Cash'
+      ? totalAmount
+      : Number(data.amountPaid) || 0
+
+  const pendingAmount = Math.max(totalAmount - amountPaid, 0)
+
   const newLoad = {
     id: uid(),
     date: new Date().toISOString().slice(0, 10),
+
     ...data,
+
+    totalAmount,
+    amountPaid,
+    pendingAmount
   }
 
   write('loads', [...loads, newLoad])
 
+  // inventory update (keep same)
   const inventory = getInventory()
   const idx = inventory.findIndex(it => it.id === data.itemId)
 
@@ -131,17 +145,18 @@ export const addLoad = (data) => {
 // ─── Payments (FINAL FIX) ─────────────────────────────────────────────────
 
 export const getPayments = () => read('payments', [])
-
 export const addPayment = (data) => {
   const payments = getPayments()
 
   const newPayment = {
     id: uid(),
+    supplierId: data.supplierId,
 
-    // ✅ KEEP ALL PASSED DATA (amount, date, billImage etc.)
-    ...data,
+    amount: Number(data.amount) || 0,
 
-    // ✅ ADD SYSTEM FIELD
+    note: data.note || '',
+    date: data.date || new Date().toISOString().slice(0, 10),
+
     createdAt: new Date().toISOString()
   }
 
@@ -191,7 +206,7 @@ export const getSupplierBalance = (supplierId) => {
   return {
     totalCredit,
     totalPaid,
-    remaining: totalCredit - totalPaid,
+    remaining: Math.max(totalCredit - totalPaid, 0),
   }
 }
 
