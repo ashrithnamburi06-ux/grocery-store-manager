@@ -6,7 +6,6 @@
 import { db } from '../firebase'
 import { collection, addDoc } from 'firebase/firestore'
 
-import { db } from '../firebase'
 import { doc, updateDoc } from 'firebase/firestore'
 
 export const completeOrderAndNotify = async (order) => {
