@@ -27,40 +27,38 @@ export default function AddPayment() {
     )
   }
 
-  // ✅ PWA SAFE IMAGE HANDLER
+  // ✅ IMAGE COMPRESS + SAVE
   const handleImageChange = (e) => {
-  const file = e.target.files?.[0]
-  if (!file) return
+    const file = e.target.files?.[0]
+    if (!file) return
 
-  const img = new Image()
-  const reader = new FileReader()
+    const reader = new FileReader()
 
-  reader.onload = (event) => {
-    img.src = event.target.result
+    reader.onload = (event) => {
+      const img = new Image()
+      img.src = event.target.result
+
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+
+        const MAX_WIDTH = 400
+        const scale = MAX_WIDTH / img.width
+
+        canvas.width = MAX_WIDTH
+        canvas.height = img.height * scale
+
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+
+        const compressed = canvas.toDataURL('image/jpeg', 0.6)
+
+        setBillImage(compressed)   // ✅ SAVE IMAGE
+        console.log("Image stored ✅")
+      }
+    }
+
+    reader.readAsDataURL(file)
   }
-
-  img.onload = () => {
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')
-
-    // 🔥 resize (important)
-    const MAX_WIDTH = 400
-    const scale = MAX_WIDTH / img.width
-
-    canvas.width = MAX_WIDTH
-    canvas.height = img.height * scale
-
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-
-    // 🔥 compress to low quality
-    const compressed = canvas.toDataURL('image/jpeg', 0.6)
-
-    setBillImage(compressed)
-    console.log("Compressed image saved ✅")
-  }
-
-  reader.readAsDataURL(file)
-}
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -70,16 +68,22 @@ export default function AddPayment() {
       return
     }
 
-    addPayment({
+    // ✅ IMPORTANT FIX (DON’T SAVE EMPTY IMAGE)
+    const paymentData = {
       supplierId:   id,
       supplierName: supplier.name,
       amount:       Number(amount),
       date,
-      billImage:    billImage
-    })
+    }
+
+    if (billImage) {
+      paymentData.billImage = billImage
+    }
+
+    addPayment(paymentData)
 
     setToast('Payment recorded ✓')
-    setTimeout(() => navigate(`/suppliers/${id}`), 1500)
+    setTimeout(() => navigate(`/suppliers/${id}`), 1200)
   }
 
   return (
@@ -127,7 +131,7 @@ export default function AddPayment() {
             />
           </div>
 
-          {/* ✅ PWA SAFE INPUT */}
+          {/* IMAGE UPLOAD */}
           <div className="form-group">
             <label>Upload Bill Image</label>
             <input 
@@ -137,16 +141,29 @@ export default function AddPayment() {
             />
           </div>
 
-          {/* ✅ IMAGE PREVIEW */}
+          {/* PREVIEW */}
           {billImage && (
-            <img src={billImage} alt="preview" width="100" />
+            <img
+              src={billImage}
+              alt="preview"
+              style={{
+                width: '100px',
+                height: '100px',
+                objectFit: 'cover',
+                borderRadius: '8px'
+              }}
+            />
           )}
 
           <button type="submit" className="btn btn--primary">
             Confirm Payment
           </button>
 
-          <button type="button" className="btn btn--outline" onClick={() => navigate(`/suppliers/${id}`)}>
+          <button
+            type="button"
+            className="btn btn--outline"
+            onClick={() => navigate(`/suppliers/${id}`)}
+          >
             Cancel
           </button>
         </form>

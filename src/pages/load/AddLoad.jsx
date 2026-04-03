@@ -109,7 +109,7 @@ const pendingAmount = Math.max(totalAmount - amountPaid, 0)
 
       amount:        totalAmount,
       amountPaid:    amountPaid,
-      pendingAmount: pendingAmount,
+      pendingAmount: totalAmount-amountPaid,
 
       paymentType:   pendingAmount > 0 ? 'Credit' : 'Cash',
 

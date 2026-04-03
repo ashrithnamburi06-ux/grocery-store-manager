@@ -123,7 +123,7 @@ export default function SupplierDetails() {
           )}
         </div>
 
-        {/* Balance summary */}
+        {/* Balance */}
         <div className="card">
           <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', fontWeight: 600 }}>
             ACCOUNT BALANCE
@@ -154,6 +154,7 @@ export default function SupplierDetails() {
           )}
         </div>
 
+        {/* Capture Bill */}
         <button
           className="btn btn--outline btn--sm"
           style={{ marginTop: '10px' }}
@@ -162,40 +163,58 @@ export default function SupplierDetails() {
           📸 Capture Bill
         </button>
 
-        {/* Transaction history */}
+        {/* Transaction History */}
         {history.length > 0 && (
           <div>
             <p className="section-title">Transaction History</p>
 
             {history.map(item => (
-              <div key={item.id} className="txn-item">
+              <div
+                key={item.id}
+                className="txn-item"
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
+              >
 
+                {/* LEFT */}
                 <div>
-                  {item._type === 'credit'
-                    ? `📥 Load — ${item.itemName}`
-                    : '💳 Payment'}
-                </div>
-
-                <div>
-                  {item._type === 'credit' ? '-' : '+'}₹{item.amount}
-                </div>
-
-                {/* Date */}
-                {item._type === 'payment' && item.date && (
-                  <div style={{ fontSize: '12px', color: 'gray' }}>
-                    {new Date(item.date).toLocaleDateString()}
+                  <div>
+                    {item._type === 'credit'
+                      ? `📥 Load — ${item.itemName}`
+                      : '💳 Payment'}
                   </div>
-                )}
 
-                {/* ✅ BILL IMAGE */}
-                {item._type === 'payment' && item.billImage && (
-                  <img
-                    src={item.billImage}
-                    alt="bill"
-                    width="80"
-                    style={{ marginTop: '6px', borderRadius: '6px' }}
-                  />
-                )}
+                  {item._type === 'payment' && item.date && (
+                    <div style={{ fontSize: '12px', color: 'gray' }}>
+                      {new Date(item.date).toLocaleDateString()}
+                    </div>
+                  )}
+                </div>
+
+                {/* RIGHT */}
+                <div style={{ textAlign: 'right' }}>
+                  <div>
+                    {item._type === 'credit' ? '-' : '+'}₹{item.amount}
+                  </div>
+
+                  {/* ✅ IMAGE */}
+                  {item._type === 'payment' && item.billImage && (
+                    <img
+                      src={item.billImage}
+                      alt="bill"
+                      style={{
+                        width: '80px',
+                        height: '80px',
+                        objectFit: 'cover',
+                        borderRadius: '8px',
+                        marginTop: '5px'
+                      }}
+                    />
+                  )}
+                </div>
 
               </div>
             ))}
