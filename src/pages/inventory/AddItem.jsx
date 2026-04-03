@@ -4,6 +4,7 @@ import TopBar from '../../components/TopBar'
 import Toast from '../../components/Toast'
 import { addInventoryItem } from '../../data/store'
 
+
 const UNITS = ['kg', 'pieces', 'boxes', 'liters', 'packets']
 
 export default function AddItem() {
@@ -18,7 +19,7 @@ export default function AddItem() {
   })
   const [toast, setToast] = useState('')
   const [errors, setErrors] = useState({})
-
+  
   const set = (field, value) => {
     setForm(f => ({ ...f, [field]: value }))
     setErrors(e => ({ ...e, [field]: '' }))
@@ -42,7 +43,7 @@ export default function AddItem() {
 
     return e
   }
-
+  
   const handleSubmit = (e) => {
     e.preventDefault()
     const errs = validate()

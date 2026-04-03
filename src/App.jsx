@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import MonthlyTransactions from './pages/MonthlyTransactions'
+import CustomerOrder from './pages/CustomerOrder'
 import { getUser } from './data/store'
 
 
@@ -33,6 +34,8 @@ import ExpenseList from './pages/expenses/ExpenseList'
 // Profile
 import Profile from './pages/profile/Profile'
 
+import Orders from './pages/Orders'
+
 // Route guard
 function ProtectedRoute({ children }) {
   const user = getUser()
@@ -50,6 +53,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/welcome" element={<Welcome />} />
 
+
         {/* Root */}
         <Route
           path="/"
@@ -59,6 +63,7 @@ export default function App() {
         {/* Dashboard */}
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/monthly-transactions" element={<MonthlyTransactions />} />
+        <Route path="/order" element={<CustomerOrder />} />
         
 
         {/* Inventory */}
@@ -76,12 +81,16 @@ export default function App() {
         <Route path="/suppliers/:id/add-payment" element={<ProtectedRoute><AddPayment /></ProtectedRoute>} />
         <Route path="/suppliers/:id/add-bill" element={<ProtectedRoute><AddBill /></ProtectedRoute>}/>
 
+        <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+
+
         {/* Expenses */}
         <Route path="/expenses" element={<ProtectedRoute><ExpenseList /></ProtectedRoute>} />
         <Route path="/expenses/add" element={<ProtectedRoute><AddExpense /></ProtectedRoute>} />
 
         {/* Profile */}
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+
 
         {/* Catch */}
         <Route path="*" element={<Navigate to="/" replace />} />

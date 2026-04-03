@@ -3,6 +3,28 @@
  */
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
+import { db } from '../firebase'
+import { collection, addDoc } from 'firebase/firestore'
+
+import { db } from '../firebase'
+import { doc, updateDoc } from 'firebase/firestore'
+
+export const completeOrderAndNotify = async (order) => {
+  const ref = doc(db, "orders", order.id)
+
+  // ✅ update status
+  await updateDoc(ref, {
+    status: "Completed"
+  })
+
+  // 📲 WhatsApp message
+  const message = `🛒 Hello ${order.customerName},\n\n✅ Your order is ready for pickup.\nPlease come and collect it.\n\nThank you 🙏`
+
+  // ⚠️ ensure phone format (India)
+  const phone = order.phone.startsWith('91') ? order.phone : `91${order.phone}`
+
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`)
+}
 
 const uid = () => Math.random().toString(36).slice(2, 9)
 
@@ -203,4 +225,21 @@ export const updateSupplier = (id, updatedData) => {
   )
 
   localStorage.setItem('suppliers', JSON.stringify(updated))
+}
+export const addOrder = async (data) => {
+  try {
+    console.log("Inside addOrder 🔥")
+
+    const docRef = await addDoc(collection(db, "orders"), {
+      ...data,
+      createdAt: new Date()
+    })
+
+    console.log("Document written with ID: ", docRef.id)
+    return docRef
+
+  } catch (err) {
+    console.error("Firestore Error ❌:", err)
+    throw err
+  }
 }

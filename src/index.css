@@ -988,6 +988,57 @@ body {
 .txn-item__amount--credit { color: var(--color-danger); }
 .txn-item__amount--payment { color: var(--color-success); }
 
+.order-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.order-card {
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.order-card h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.order-card input,
+.order-card textarea {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+}
+
+.order-card textarea {
+  height: 100px;
+}
+
+.order-card button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: #16a34a;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.order-card button:hover {
+  background: #15803d;
+}
 /* ===========================
    TOAST NOTIFICATION
    =========================== */

@@ -1,13 +1,18 @@
 import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import TopBar from '../../components/TopBar'
 import BottomNav from '../../components/BottomNav'
 import { getLoads } from '../../data/store'
+
 import {
   getUser,
   getLowStockItems,
   getInventory,
   getAllPendingBalances,
 } from '../../data/store'
+
+import { db } from '../../firebase'
+import { collection, onSnapshot } from 'firebase/firestore'
 
 export default function Dashboard() {
   const navigate  = useNavigate()
@@ -16,26 +21,43 @@ export default function Dashboard() {
   const allItems  = getInventory()
   const pending   = getAllPendingBalances()
 
+  const [orderCount, setOrderCount] = useState(0)
+  const [newOrders, setNewOrders] = useState(0)
+
   const totalOwed = pending.reduce((s, p) => s + p.remaining, 0)
 
   const loads = getLoads()
   const now = new Date()
 
-  // 🔥 FILTER CURRENT MONTH
   const monthlyLoads = loads.filter(load => {
     const date = new Date(load.createdAt || Date.now())
-
     return (
       date.getMonth() === now.getMonth() &&
       date.getFullYear() === now.getFullYear()
     )
   })
 
-  // 🔥 ONLY PAID AMOUNT = EXPENSE
   const monthlyExpense = monthlyLoads.reduce(
     (sum, l) => sum + (l.amountPaid || 0),
     0
   )
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, "orders"), (snapshot) => {
+      setOrderCount(snapshot.docs.length)
+
+      const added = snapshot.docChanges().filter(c => c.type === 'added')
+
+      if (added.length > 0) {
+        setNewOrders(prev => prev + added.length)
+
+        const audio = new Audio('/notification.mp3')
+        audio.play().catch(() => {})
+      }
+    })
+
+    return () => unsubscribe()
+  }, [])
 
   return (
     <div className="screen">
@@ -43,14 +65,16 @@ export default function Dashboard() {
 
       <div className="screen-content">
 
-        {/* ── Stats grid ── */}
         <div className="stat-grid">
+
+          {/* Total Items */}
           <div className="stat-card stat-card--accent">
             <div className="stat-card__icon">📦</div>
             <div className="stat-card__value">{allItems.length}</div>
             <div className="stat-card__label">Total Items</div>
           </div>
 
+          {/* Low Stock */}
           <div className="stat-card">
             <div className="stat-card__icon">⚠️</div>
             <div
@@ -62,19 +86,34 @@ export default function Dashboard() {
             <div className="stat-card__label">Low Stock</div>
           </div>
 
-          {/* ✅ FIXED HERE */}
+          {/* Monthly Expense */}
           <div 
-                 className="stat-card card--clickable"
-                 style={{ cursor: 'pointer' }}
-                 onClick={() => navigate('/monthly-transactions')}
-                      >
-                   <div className="stat-card__icon">💸</div>
-                 <div className="stat-card__value">
-                   ₹{monthlyExpense.toLocaleString()}
-                     </div>
-                 <div className="stat-card__label">This Month's Expenses</div>
-                  </div>
+            className="stat-card card--clickable"
+            onClick={() => navigate('/monthly-transactions')}
+          >
+            <div className="stat-card__icon">💸</div>
+            <div className="stat-card__value">
+              ₹{monthlyExpense.toLocaleString()}
+            </div>
+            <div className="stat-card__label">This Month's Expenses</div>
+          </div>
 
+          {/* 🔥 Send Order (moved + smaller) */}
+          <div 
+            className="stat-card card--clickable"
+            style={{ padding: '10px' }}
+            onClick={handleShare}
+          >
+            <div className="stat-card__icon">📤</div>
+            <div className="stat-card__value" style={{ fontSize: '14px' }}>
+              Send Order
+            </div>
+            <div className="stat-card__label" style={{ fontSize: '11px' }}>
+              Share Order Link
+            </div>
+          </div>
+
+          {/* Pending Payments */}
           <div className="stat-card">
             <div className="stat-card__icon">🧾</div>
             <div
@@ -85,9 +124,46 @@ export default function Dashboard() {
             </div>
             <div className="stat-card__label">Pending Payments</div>
           </div>
+
+          {/* 🔥 View Orders (moved below pending + badge) */}
+          <div 
+            className="stat-card card--clickable"
+            onClick={() => {
+              setNewOrders(0)
+              navigate('/orders')
+            }}
+          >
+            <div className="stat-card__icon" style={{ position: 'relative' }}>
+              🛒
+              {newOrders > 0 && (
+                <span style={{
+                  position: 'absolute',
+                  top: '-6px',
+                  right: '-10px',
+                  background: 'red',
+                  color: 'white',
+                  fontSize: '10px',
+                  padding: '2px 6px',
+                  borderRadius: '50%',
+                  fontWeight: 'bold'
+                }}>
+                  {newOrders}
+                </span>
+              )}
+            </div>
+
+            <div className="stat-card__value">
+              View Orders
+            </div>
+
+            <div className="stat-card__label">
+              Manage Customer Orders
+            </div>
+          </div>
+
         </div>
 
-        {/* ── Quick Actions ── */}
+        {/* Quick Actions */}
         <div>
           <p className="section-title" style={{ marginBottom: '10px' }}>Quick Actions</p>
           <div className="quick-actions">
@@ -110,79 +186,15 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ── Low Stock Alerts ── */}
-        {lowStock.length > 0 && (
-          <div>
-            <div className="section-header">
-              <p className="section-title">Low Stock Alerts</p>
-              <button
-                className="section-link"
-                onClick={() => navigate('/inventory')}
-              >
-                View All
-              </button>
-            </div>
-            <div className="alert-card">
-              <div className="alert-card__title">🚨 Needs Restocking</div>
-              {lowStock.map(item => (
-                <div key={item.id} className="alert-item">
-                  <span className="alert-item__name">{item.name}</span>
-                  <span className="alert-item__qty">
-                    {item.quantity} {item.unit} left (min {item.minStock})
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ── Pending Supplier Payments ── */}
-        {pending.length > 0 && (
-          <div>
-            <div className="section-header">
-              <p className="section-title">Pending Payments</p>
-              <button
-                className="section-link"
-                onClick={() => navigate('/suppliers')}
-              >
-                Manage
-              </button>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {pending.map(s => (
-                <div
-                  key={s.id}
-                  className="pending-card card--clickable"
-                  style={{ cursor: 'pointer' }}
-                  onClick={() => navigate(`/suppliers/${s.id}`)}
-                >
-                  <div>
-                    <div className="pending-card__label">You owe</div>
-                    <div className="pending-card__name">{s.name}</div>
-                  </div>
-                  <div className="pending-card__amount">
-                    ₹{s.remaining.toLocaleString()}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* All clear state */}
-        {lowStock.length === 0 && pending.length === 0 && (
-          <div className="card" style={{ textAlign: 'center', padding: '24px' }}>
-            <div style={{ fontSize: '36px', marginBottom: '8px' }}>✅</div>
-            <p style={{ fontWeight: 700 }}>All Good!</p>
-            <p className="text-muted" style={{ fontSize: '13px', marginTop: '4px' }}>
-              No low stock or pending payments.
-            </p>
-          </div>
-        )}
-        
       </div>
 
       <BottomNav />
     </div>
   )
+}
+
+const handleShare = () => {
+  const link = `${window.location.origin}/order`
+  const message = `🛒 Please place your order here:\n${link}`
+  window.open(`https://wa.me/?text=${encodeURIComponent(message)}`)
 }

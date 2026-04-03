@@ -7,5 +7,16 @@ self.addEventListener('activate', (event) => {
 })
 
 self.addEventListener('fetch', (event) => {
-  // basic fetch
+
+  const url = event.request.url
+
+  // 🚨 VERY IMPORTANT: Skip Firebase requests
+  if (
+    url.includes('firestore.googleapis.com') ||
+    url.includes('googleapis.com')
+  ) {
+    return
+  }
+
+  // your existing caching logic here
 })
