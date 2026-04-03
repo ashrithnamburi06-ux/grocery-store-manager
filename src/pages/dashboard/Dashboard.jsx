@@ -75,7 +75,10 @@ export default function Dashboard() {
           </div>
 
           {/* Low Stock */}
-          <div className="stat-card">
+          <div 
+  className="stat-card card--clickable"
+  onClick={() => navigate('/inventory')}
+>
             <div className="stat-card__icon">⚠️</div>
             <div
               className="stat-card__value"
@@ -114,7 +117,10 @@ export default function Dashboard() {
           </div>
 
           {/* Pending Payments */}
-          <div className="stat-card">
+          <div 
+  className="stat-card card--clickable"
+  onClick={() => navigate('/suppliers')}
+>
             <div className="stat-card__icon">🧾</div>
             <div
               className="stat-card__value"
