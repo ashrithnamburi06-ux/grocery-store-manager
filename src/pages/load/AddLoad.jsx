@@ -100,21 +100,20 @@ const pendingAmount = Math.max(totalAmount - amountPaid, 0)
 
     // ✅ FINAL CORRECT DATA PASS
     addLoad({
-      itemId:        finalItemId,
-      itemName:      finalItemName,
-      quantity:      Number(form.quantity),
-      supplierId:    finalSupplierId,
-      supplierName:  finalSupplierName,
-      supplierPhone: finalSupplierPhone,
+  itemId: finalItemId,
+  itemName: finalItemName,
+  quantity: Number(form.quantity),
+  supplierId: finalSupplierId,
+  supplierName: finalSupplierName,
+  supplierPhone: finalSupplierPhone,
 
-      amount:        totalAmount,
-      amountPaid:    amountPaid,
-      pendingAmount: totalAmount-amountPaid,
+  amount: totalAmount,
+  amountPaid: amountPaid,
 
-      paymentType:   pendingAmount > 0 ? 'Credit' : 'Cash',
+  paymentType: pendingAmount > 0 ? 'Credit' : 'Cash',
 
-      date:          form.date,
-    })
+  date: form.date,
+})
 
     setToast('Load added ✓')
     setTimeout(() => navigate('/dashboard'), 1500)

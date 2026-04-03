@@ -190,7 +190,7 @@ export const addBill = (data) => {
 
 export const getSupplierBalance = (supplierId) => {
   const loads = getLoads().filter(
-    l => l.supplierId === supplierId && Number(l.pendingAmount || 0) > 0
+    l => l.supplierId === supplierId
   )
 
   const payments = getPayments().filter(
@@ -198,12 +198,16 @@ export const getSupplierBalance = (supplierId) => {
   )
 
   const totalCredit = loads.reduce(
-    (s, l) => s + Number(l.pendingAmount || 0),
+    (s, l) => {
+      const total = Number(l.amount || 0)
+      const paid  = Number(l.amountPaid || 0)
+      return s + Math.max(total - paid, 0)
+    },
     0
   )
 
   const totalPaid = payments.reduce(
-    (s, p) => s + Number(p.amount),
+    (s, p) => s + Number(p.amount || 0),
     0
   )
 
@@ -273,3 +277,4 @@ export const setShopName = (name) => {
 export const getShopName = () => {
   return localStorage.getItem('shopName') || ''
 }
+
