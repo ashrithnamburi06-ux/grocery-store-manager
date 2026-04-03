@@ -102,6 +102,10 @@ export const getLowStockItems = () =>
 
 // ─── Loads ────────────────────────────────────────────────────────────────────
 
+export const getLoads = () => {
+  const data = localStorage.getItem('loads')
+  return data ? JSON.parse(data) : []
+}
 export const addLoad = (data) => {
   const loads = getLoads()
 
